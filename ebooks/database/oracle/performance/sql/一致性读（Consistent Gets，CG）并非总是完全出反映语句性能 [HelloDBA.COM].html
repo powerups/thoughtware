@@ -1,0 +1,745 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="Description" content="一致性读（Consistent Gets，CG）是反映SQL语句性能的一项重要数据。它通常作为我们语句调优的指标。一般情况下，通过该数据可以比较两条语句或者同一语句的不同执行计划之间的性能。然而，某些情况下，它并不会完全反映出语句的性能。
+我们先看两份性能统计数据：">
+<meta name="Keywords" content="HelloDBA, DBA, Oracle, SQL Server, Database, DB, fuyuncat, 数据库, 调优, 备份, 方案, RAC, SQL Tuning, Performance Tuning, NON-SQL">
+<meta name="verify-v1" content="UlS54e6QG2YvdDUYce2K6e1LeDvv4Ff8CJ4WhHWynyw=" >
+<style type="text/css"><!--A:hover { color:red;} A:link { color:blue; }--></style>
+<title>一致性读（Consistent Gets，CG）并非总是完全出反映语句性能 [HelloDBA.COM]</title>
+<link rel="stylesheet" type="text/css" href="mspstyle.css">
+<script type="text/javascript" src="http://s7.addthis.com/js/152/addthis_widget.js"></script>
+<!-- AddThis Bookmark Button BEGIN -->
+<script type="text/javascript">
+  addthis_url    = location.href;   
+  addthis_title  = document.title;  
+  addthis_pub    = 'HelloDBA';     
+</script>
+<script type="text/javascript" src="http://s7.addthis.com/js/addthis_widget.php?v=12" ></script>
+<!-- AddThis Bookmark Button END -->
+<link rel="stylesheet" href="http://www.HelloDBA.com/insertcode.css">
+
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="chmetcnv"/>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="chsdate"/>
+<!-- begin theme CSS -->
+<style type="text/css">
+<!--
+.spBody {
+  color: #000000;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spFrameBody {
+  background-color: #e7e7e7;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spFrameBorder {
+  background-color: #000000;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spFrameTitle {
+  background-color: #527bad;
+  color: #FFFFFF;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+  font-weight: bold;
+}
+.spFrameTitleLink:link {
+  color: #FFFFFF;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spHead {
+  color: #000000;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spLink {
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spLink:active {
+  color: #e6e6e6;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spLink:link {
+  color: #527bad;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spLink:visited {
+  color: #999999;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+
+ /* Font Definitions */
+ @font-face
+	{font-family:宋体;
+	panose-1:2 1 6 0 3 1 1 1 1 1;
+	mso-font-alt:SimSun;
+	mso-font-charset:134;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+@font-face
+	{font-family:新宋体;
+	panose-1:2 1 6 9 3 1 1 1 1 1;
+	mso-font-charset:134;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+@font-face
+	{font-family:"\@宋体";
+	panose-1:2 1 6 0 3 1 1 1 1 1;
+	mso-font-charset:134;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+@font-face
+	{font-family:"\@新宋体";
+	panose-1:2 1 6 9 3 1 1 1 1 1;
+	mso-font-charset:134;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0cm;
+	margin-bottom:.0001pt;
+	text-align:justify;
+	text-justify:inter-ideograph;
+	mso-pagination:none;
+	font-size:10.5pt;
+	mso-bidi-font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:宋体;
+	mso-font-kerning:1.0pt;}
+h1
+	{mso-style-next:正文;
+	margin-top:17.0pt;
+	margin-right:0cm;
+	margin-bottom:16.5pt;
+	margin-left:0cm;
+	text-align:justify;
+	text-justify:inter-ideograph;
+	line-height:240%;
+	mso-pagination:lines-together;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:22.0pt;
+	font-family:"Times New Roman";
+	mso-font-kerning:22.0pt;}
+span.SpellE
+	{mso-style-name:"";
+	mso-spl-e:yes;}
+span.GramE
+	{mso-style-name:"";
+	mso-gram-e:yes;}
+ /* Page Definitions */
+ @page
+	{mso-page-border-surround-header:no;
+	mso-page-border-surround-footer:no;}
+@page Section1
+	{size:595.3pt 841.9pt;
+	margin:72.0pt 90.0pt 72.0pt 90.0pt;
+	mso-header-margin:42.55pt;
+	mso-footer-margin:49.6pt;
+	mso-paper-source:0;
+	layout-grid:15.6pt;}
+div.Section1
+	{page:Section1;}
+
+.dropmenu {
+font-family: Arial, Veranda, Times;font-size: 10pt;font-weight: bold;
+list-style-type: none; margin:0;padding:0;border:0;background-color:#527BAD
+}
+
+.dropmenu ul{
+visibility:hidden;position:absolute;width:108px;display: block;margin: 0;padding: 0;  line-height: 15px; background-color:#527BAD
+}
+
+
+.dropmenu li{
+float: none;  display: block !important; display: inline; text-decoration: none;font-weight:bold;font-size:10pt;  top: 0px; background-color:#527BAD
+}
+
+.dropmenu li:hover {
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;
+}
+
+.dropmenu ul li div{
+visibility:hidden; position:absolute; width:108px; left: 108px; top: 0px; margin: 0;padding: 0;  display: inline; list-style: none; background-color:#325B9D
+}
+
+.dropmenu ul li div a{
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#325B9D
+}
+
+.dropmenu ul li div a:hover {
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#8db3ff
+}
+
+.dropmenu ul li a{
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#527BAD
+}
+
+.dropmenu ul li a:hover {
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#8db3ff
+}
+
+
+
+
+.dropmenu a{
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#527BAD
+}
+
+.dropmenu a:hover {
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#8db3ff
+}
+
+
+-->
+</style>
+<!-- end theme CSS -->
+</head>
+<body topmargin="0" leftmargin="0" vlink="#000080" bgcolor="#E9F3FE" link="#000080" text="#000080">
+<form method=get action="http://www.google.com/search">
+<table border="0" cellpadding="1" width="100%" bgcolor="#CCCCCC">
+  <tr> 
+    <td width="99%" bgcolor="#527BAD" colspan="10"> 
+      <table border="0" cellpadding="1" cellspacing="0" width="100%" bgcolor="#000080">
+        <tr> 
+          <td height="88" valign="top" bgcolor="#527BAD" rowspan="3" width="50%"> 
+            <img border="0" src="http://www.HelloDBA.com/Images/left_title.jpg" width="100%" height="88" alt="HelloDBA"></td>
+          <td width="18%" height="23" valign="top" bgcolor="#527BAD" colspan="2" align="right"> 
+            [<a href=http://www.HelloDBA.com/index.php?lang=en>English</a>]</td>
+        </tr>
+        <tr> 
+          <td width="13%" height="35" valign="top" bgcolor="#527BAD"> 
+					<input type=text name=q size=31 maxlength=255 value=""></td>
+          <td width="5%" height="35" valign="top" bgcolor="#527BAD"> 
+					<input type=submit name=btnG value="搜索"></td>
+        </tr>
+        <tr> 
+          <td width="18%" height="25" valign="top" bgcolor="#527BAD" colspan="2"> 
+					<font size=-1>
+					<input type=radio name=sitesearch value=""> 搜索Internet
+					<input type=radio name=sitesearch value="www.HelloDBA.com" checked> 搜索 HelloDBABA
+					</font>
+          </td>
+        </tr>
+  <!--tr>
+    <img src="Images/top3.gif"> 
+  <tr--> 
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="99%" bgcolor="#527BAD" colspan="10">
+      <table border="0" cellpadding="1" cellspacing="0" width="100%" bgcolor="#000080">
+        <tr>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+        		<font color="#FCCD10"></font></a>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD" class="dropmenu"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('HomePage').style.visibility='visible'" onMouseOut="document.getElementById('HomePage').style.visibility='hidden'" bgcolor="#527BAD">
+					<a href="http://www.HelloDBA.com/index.php?lang=cn"><font color="#FCCD10">首页</font></a><br>
+					<ul id="HomePage" bgcolor="#527BAD">
+						<li><a href="http://www.HelloDBA.com/index.php?lang=en"><font color="#FCCD10">English</font></a></li>
+						<li><a href="http://www.HelloDBA.com/index.php?lang=cn"><font color="#FCCD10">中文</font></a></li>
+					</ul>
+				</div>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('TechDoc').style.visibility='visible'" onMouseOut="document.getElementById('TechDoc').style.visibility='hidden'" bgcolor="#527BAD">
+					<a href="http://www.HelloDBA.com/index.php?class=doc&lang=cn"><font color="#FCCD10">技术文档</font></a><br>
+					<ul id="TechDoc" bgcolor="#527BAD">
+						<li><a href="http://www.HelloDBA.com/index.php?class=doc&lang=cn"><font color="#FCCD10">文章</font></a></li>
+						<li><a href="http://www.HelloDBA.com/index.php?class=cases&lang=cn"><font color="#FCCD10">案例</font></a></li>
+					</ul>
+				</div>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('ProdDown').style.visibility='visible'" onMouseOut="document.getElementById('ProdDown').style.visibility='hidden'" bgcolor="#527BAD">
+					<a href="http://www.HelloDBA.com/index.php?class=prods&lang=cn"><font color="#FCCD10">产品及下载</font></a><br>
+					<ul id="ProdDown" bgcolor="#527BAD">
+						<li onMouseOver="document.getElementById('ProdsMenu').style.visibility='visible'" onMouseOut="document.getElementById('ProdsMenu').style.visibility='hidden'">
+							<a href="http://www.HelloDBA.com/index.php?class=prods&lang=cn"><font color="#FCCD10">产品 >> </font></a><br>
+							<div id="ProdsMenu" bgcolor="#527BAD">
+								<a href="http://www.HelloDBA.com/reader.php?ID=180&lang=cn"><font color="#FCCD10">FyDB</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=122&lang=cn"><font color="#FCCD10">OraTracer</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=119&lang=cn"><font color="#FCCD10">FySafe</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=121&lang=cn"><font color="#FCCD10">FyUnWrap</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=120&lang=cn"><font color="#FCCD10">SQLStress</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=191&lang=cn"><font color="#FCCD10">Fy_Recover_Data</font></a><br>
+							</div>
+						</li>
+						<li><a href="http://www.HelloDBA.com/index.php?class=sharing&lang=cn"><font color="#FCCD10">分享</font></a></li>
+					</ul>
+				</div>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('subscribe').style.visibility='visible'" onMouseOut="document.getElementById('subscribe').style.visibility='hidden'">
+					<a href="http://www.HelloDBA.com/rss.xml"><font color="#FCCD10">订阅</font></a><br>
+					<ul id="subscribe">
+						<li><a target="_blank" href="http://www.google.com/ig/add?feedurl=http://www.HelloDBA.com/rss.xml"><img title="至 Google" src="http://www.HelloDBA.com/images/icon_google.gif" alt="至 Google" /></a></li>
+						<li><a target="_blank" href="http://add.my.yahoo.com/rss?url=http://www.HelloDBA.com/rss.xml"><img title="至 Yahoo" src="http://www.HelloDBA.com/images/icon_yahoo.gif" alt="至 Yahoo" /></a></li>
+						<li><a target="_blank" href="http://www.zhuaxia.com/add_channel.php?url=http://www.HelloDBA.com/rss.xml"><img title="至 Zhuxia" src="http://www.HelloDBA.com/images/icon_zhuaxia.gif" alt="至 zhuxia" /></a></li>
+						<li><a target="_blank" href="http://www.xianguo.com/subscribe.php?url=http://www.HelloDBA.com/rss.xml"><img title="至 Xianguo" src="http://www.HelloDBA.com/images/icon_xianguo.gif" alt="至 xianguo" /></a></li>
+						<li><a target="_blank" href="http://mail.qq.com/cgi-bin/feed?u=http://www.HelloDBA.com/rss.xml"><img title="至 QQ eMail" src="http://www.HelloDBA.com/images/icon_qq.gif" alt="至 QQ email" /></a></li>
+						<li><a target="_blank" href="http://reader.yodao.com/b.do?url=http://www.HelloDBA.com/rss.xml"><img title="至 Youdao" src="http://www.HelloDBA.com/images/icon_youdao.gif" alt="至 YouDao" /></a></li>
+					</ul>
+				</div>
+        	  </td>
+            <td width="9%" align="left" bgcolor="#527BAD" class="dropmenu"> 
+              <a href="http://www.addthis.com/bookmark.php?v=12&amp;winname=addthis&amp;pub=HelloDBAcom&amp;s=&amp;url=http%3A%2F%2Fwww.HelloDBA.com%2Ftitle=HelloDBA.Com" onMouseOver="return addthis_open(this, '', '', '一致性读（Consistent Gets，CG）并非总是完全出反映语句性能')" onMouseOut="addthis_close()" onClick="return addthis_sendto(this, '', '', '一致性读（Consistent Gets，CG）并非总是完全出反映语句性能')" style="text-decoration: none;font-weight:bold;font-size:10pt;"><font color="#FCCD10">收藏</font></a>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('About').style.visibility='visible'" onMouseOut="document.getElementById('About').style.visibility='hidden'" bgcolor="#527BAD">
+					<a href="http://www.HelloDBA.com/reader.php?ID=118&lang=cn"><font color="#FCCD10">关于</font></a><br>
+					<ul id="About" bgcolor="#527BAD">
+						<li><a href="http://www.HelloDBA.com/reader.php?ID=118&lang=cn"><font color="#FCCD10">本人</font></a></li>
+						<li><a href="http://www.HelloDBA.com/reader.php?ID=117&lang=cn"><font color="#FCCD10">申明</font></a></li>
+					</ul>
+				</div>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+        		<font color="#FCCD10"></font></a>
+            </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr bgcolor="#D0E6FD"> 
+    <td width="99%" colspan="10" align=center> 
+		  <font size="2" face="宋体">&nbsp;&nbsp;Oracle技术站。email:
+		<a href="mailto:fuyuncat@gmail.com">fuyuncat@gmail.com</a>&nbsp; MSN: fuyuncat@hotmail.com</font>
+ 		<iframe height="24" frameborder="0" width="220" scrolling="no" src="http://widget.weibo.com/relationship/followbutton.php?language=zh_cn&amp;width=100%&amp;height=24&amp;uid=1407854870&amp;style=1&amp;btn=red&amp;dpc=1" border="0" marginheight="0" marginwidth="0" allowtransparency="true" style="margin-left: 20px;margin-top:0px"></iframe>&nbsp; 
+        <a href="http://www.acoug.org" target=_blank><font color="#CCCCCC">
+			<img border="0" src="http://www.HelloDBA.com/Images/acoug.png" width="110" height="30" alt="acoug"></font></a>&nbsp; 
+        <a href="https://apex.oracle.com/pls/apex/f?p=19297:4:110789587846680::NO:4:P4_ID:7120" target=_blank><font color="#CCCCCC">
+			<img border="0" src="http://www.HelloDBA.com/Images/O_ACELogo_clr.gif" height="30" alt="acoug"></font></a>&nbsp; 
+
+	</td>
+  </tr>
+</table>
+</form>
+
+<!-- <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script> -->
+<div class=Section1 style='layout-grid:15.6pt'>
+
+<h1 id="Title" align=center style='text-align:center'><span lang=EN-US style='color:blue'>一致性读（Consistent Gets，CG）并非总是完全出反映语句性能</span><g:plusone></g:plusone></h1>
+<p align="center">
+[<a id="ArticleAddr" href="http://www.HelloDBA.com/reader.php?ID=214&lang=EN">English</a>]
+</p>
+<p class=MsoNormal align=center style='text-align:center'><b style='mso-bidi-font-weight:
+normal'><span style='font-size:10.0pt;font-family:宋体;mso-ascii-font-family:
+"Times New Roman";mso-hansi-font-family:"Times New Roman";color:red'>作者：</span></b>
+<a id="Author" style="TEXT-DECORATION: none" href="http://www.HelloDBA.com" target=_blank><b style='mso-bidi-font-weight:normal'><span lang=EN-US style='font-size:10.0pt;color:red'>fuyuncat<o:p></o:p></span></b></a>
+</p>
+
+<p class=MsoNormal align=center style='text-align:center'><b style='mso-bidi-font-weight:
+normal'><span style='font-size:10.0pt;font-family:宋体;mso-ascii-font-family:
+"Times New Roman";mso-hansi-font-family:"Times New Roman";color:red'>来源：</span></b>
+<a id="FromSite" style="TEXT-DECORATION: none" href="http://www.HelloDBA.com" target=_blank><b style='mso-bidi-font-weight:normal'><span lang=EN-US style='font-size:10.0pt;color:red'><font color="#FF0000">www.HelloDBA.com</font><o:p></o:p></span></b></a>
+</p>
+
+<p class=MsoNormal align=center style='text-align:center'><b style='mso-bidi-font-weight:
+normal'><span style='font-size:10.0pt;font-family:宋体;mso-ascii-font-family:
+"Times New Roman";mso-hansi-font-family:"Times New Roman";color:red'>日期：</span></b>
+<a id="FromSite" style="TEXT-DECORATION: none" href="http://www.HelloDBA.com/" target=_blank><b style='mso-bidi-font-weight:normal'><span lang=EN-US style='font-size:10.0pt;color:red'><font color="#FF0000">2013-10-24 22:48:14</font><o:p></o:p></span></b></a>
+</p>
+
+<p class=MsoNormal align=center style='text-align:center'>
+分享到&nbsp;
+<script type="text/javascript">
+function trim(str){
+    return str.replace(/(^\s*)|(\s*$)/g, "");  
+}
+
+function shareToQQ(){
+	var _t = "一致性读（Consistent Gets，CG）并非总是完全出反映语句性能";
+	if (trim(_t) == ""){
+		_t=encodeURIComponent(document.title);
+	}else{
+		_t=encodeURIComponent(_t);
+	}
+	var _url = encodeURIComponent(document.location);
+	var _pic = encodeURI('');
+	var _site = 'http://www.HelloDBA.net';
+	var _u = 'http://v.t.qq.com/share/share.php?url='+_url+'&site='+_site+'&pic='+_pic+'&title='+_t;
+	window.open( _u,'', 'width=700, height=680, top=0, left=0, toolbar=no, menubar=no, scrollbars=no, location=yes, resizable=no, status=no' );
+}
+
+function shareTo(s,uu,tt,n,ec){
+	t="一致性读（Consistent Gets，CG）并非总是完全出反映语句性能";
+	ec = (typeof(ec)== "undefined")?1:ec; 
+	u = ec==1?encodeURIComponent(location.href):location.href;
+	if (trim(t) == ""){
+		t=encodeURIComponent(document.title);
+	}else{
+		t=encodeURIComponent(t);
+	}
+	window.open(s+uu+u+tt+t,'ShareTo'+n,'toolbar=0,status=0,width=626,height=436');
+}
+</script>
+
+<a title="新浪微博" href="javascript:(function(){window.open('http://v.t.sina.com.cn/share/share.php?&url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent('一致性读（Consistent Gets，CG）并非总是完全出反映语句性能'),'_blank','width=450,height=400');})()"><img alt="新浪微博" src="images/sina.png" border=0 width=16 height=16></a>
+<a title="腾讯微博" href='javascript:void(0)' onclick='shareToQQ();' class='tmblog'><img src='images/qq.png' alt="腾讯微博" border=0 width=16 height=16></a>
+<a href="javascript:window.open('http://share.renren.com/share/buttonshare.do?title='+encodeURIComponent('一致性读（Consistent Gets，CG）并非总是完全出反映语句性能'.substring(0,76))+'&link='+encodeURIComponent(location.href)+'&content=','_blank','scrollbars=no,width=600,height=450,left=75,top=20,status=no,resizable=yes'); void 0" style="color:#000000;text-decoration:none;font-size:12px;font-weight:normal" title="人人网"><IMG alt="人人网" src="images/renren.ico" border=0 width=16 height=16></a>
+<a title="i贴吧" href="javascript:void(function(){var itieba_share = 'http://tieba.baidu.com/i/sys/share?link=' + encodeURIComponent(location.href)+'&title=' + encodeURIComponent('一致性读（Consistent Gets，CG）并非总是完全出反映语句性能')+'&content=' + encodeURIComponent('');if (!window.open(itieba_share, 'itieba', 'toolbar=0,resizable=1,scrollbars=yes,status=1,width=626,height=436'))  {location.href = itieba_share;}})();"><img src="images/baidu.ico" alt="i贴吧" border=0 width=16 height=16></a>
+<a href="javascript:d=document;t=d.selection?(d.selection.type!='None'?d.selection.createRange().text:''):(d.getSelection?d.getSelection():'');void(kaixin=window.open('http://www.kaixin001.com/~repaste/repaste.php?&amp;rurl='+escape(d.location.href)+'&amp;rtitle='+escape('一致性读（Consistent Gets，CG）并非总是完全出反映语句性能')+'&amp;rcontent='+escape(d.location.href),'kaixin'));kaixin.focus();" title="开心网"><img src="images/kaixin.ico" alt="开心网" border=0 width=16 height=16></a>
+<a title="豆瓣" href="javascript:var u='http://www.douban.com/recommend/?url='+location.href+'&amp;title='+encodeURIComponent('一致性读（Consistent Gets，CG）并非总是完全出反映语句性能');window.open(u,'douban','toolbar=0,resizable=1,scrollbars=yes,status=1,width=450,height=330');void(0)"><img src="images/douban.ico" alt="豆瓣" border=0 width=16 height=16></a>
+<a href="javascript:d=document;t=d.selection?(d.selection.type!='None'?d.selection.createRange().text:''):(d.getSelection?d.getSelection():'');void(kaixin=window.open('http://share.jianghu.taobao.com/share/addShare.htm?url='+escape(d.location.href)+'&tracelog=hellodba.com'));" title="淘宝"><img src="images/taobao.ico" alt="淘宝" border=0 width=16 height=16></a>
+<a href="javascript: void(window.open('http://twitter.com/home/?status='.concat(encodeURIComponent('一致性读（Consistent Gets，CG）并非总是完全出反映语句性能')) .concat(' ') .concat(encodeURIComponent(location.href))));" title="推特"><img src="images/twitter.ico" alt="推特" border=0 width=16 height=16></a>
+<a href="javascript:shareTo('http://www.facebook.com/sharer.php?','u=','&t=','Facebook',1)" title="Facebook"><img src="images/facebook.png" alt="Facebook" border=0 width=16 height=16/></a>
+<a href="javascript:shareTo('https://mail.google.com/mail/?ui=2&view=cm&fs=1&tf=1','&body=','&su=','gmail',1)" title="GMail"><img src="images/gmail.gif" alt="GMail" border=0 width=16 height=16/></a>
+<a href="javascript:shareTo('http://www.blogger.com/blog_this.pyra?','u=','&n=','Blogger',1)" title="Blogger"><img src="images/blogger.png" alt="Blogger" border=0 width=16 height=16/></a>
+<!-- <a href="javascript:shareTo('http://www.google.com/buzz/post?','url=','&title=','Buzz',1)" title="Buzz"><img src="images/buzz.gif" alt="Buzz" border=0 width=16 height=16/></a> -->
+<a href="javascript:shareTo('http://promote.orkut.com/preview?nt=orkut.com','&du=','&tt=','Orkut',1)" title="Orkut"><img src="images/orkut.png" alt="Orkut" border=0 width=16 height=16/></a>
+<!-- <a href="javascript:shareTo('http://www.google.com/reader/link?','url=','&title=','Reader',1)" title="Google Reader"><img src="images/reader.png" alt="Google Reader" border=0 width=16 height=16/></a> -->
+<a href="javascript:shareTo('https://www.google.com/bookmarks/mark?op=edit','&bkmk=','&title=','Bookmarks',1)" title="Google Bookmarks"><img src="images/bookmarks.gif" alt="Google Bookmarks" border=0 width=16 height=16/></a>
+</p>
+<blockquote>
+	<blockquote>
+		<table cellPadding="0" width="88%" border="0" id="table5">
+			<tr>
+				<td id="ArticleContent" width="88%">
+<p><span id="docs-internal-guid-1b1e1d1c-ecd3-ae17-75c6-37b2c97597fd"> </span></p>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size: 15px; font-family: Arial; background-color: transparent; vertical-align: baseline; white-space: pre-wrap;">一致性读（Consistent Gets，CG）是反映SQL语句性能的一项重要数据。它通常作为我们语句调优的指标。一般情况下，通过该数据可以比较两条语句或者同一语句的不同执行计划之间的性能。然而，某些情况下，它并不会完全反映出语句的性能。</span></p>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size: 15px; font-family: Arial; background-color: transparent; vertical-align: baseline; white-space: pre-wrap;">我们先看两份性能统计数据：</span>&nbsp;</p>
+<p>&nbsp;</p>
+<div class="codeText">
+<div class="codeHead">SQL代码</div>
+<ol start="1" class="dp-sql">
+    <li class="alt"><span><span>SQL&nbsp;1:&nbsp;&nbsp;</span></span></li>
+    <li><span><span class="keyword">Statistics</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span><span class="comment">----------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;recursive&nbsp;calls&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;db&nbsp;block&nbsp;gets&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;460&nbsp;&nbsp;consistent&nbsp;gets&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;physical&nbsp;reads&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;redo&nbsp;<span class="keyword">size</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;1203583&nbsp;&nbsp;bytes&nbsp;sent&nbsp;via&nbsp;SQL*Net&nbsp;<span class="keyword">to</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3868&nbsp;&nbsp;bytes&nbsp;received&nbsp;via&nbsp;SQL*Net&nbsp;<span class="keyword">from</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;306&nbsp;&nbsp;SQL*Net&nbsp;roundtrips&nbsp;<span class="keyword">to</span><span>/</span><span class="keyword">from</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;sorts&nbsp;(memory)&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;sorts&nbsp;(disk)&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;<span class="keyword">rows</span><span>&nbsp;processed&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;</span></li>
+    <li><span>SQL&nbsp;2:&nbsp;&nbsp;</span></li>
+    <li class="alt"><span><span class="keyword">Statistics</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span><span class="comment">----------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;recursive&nbsp;calls&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;db&nbsp;block&nbsp;gets&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;167&nbsp;&nbsp;consistent&nbsp;gets&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;physical&nbsp;reads&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;redo&nbsp;<span class="keyword">size</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;267325&nbsp;&nbsp;bytes&nbsp;sent&nbsp;via&nbsp;SQL*Net&nbsp;<span class="keyword">to</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3868&nbsp;&nbsp;bytes&nbsp;received&nbsp;via&nbsp;SQL*Net&nbsp;<span class="keyword">from</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;306&nbsp;&nbsp;SQL*Net&nbsp;roundtrips&nbsp;<span class="keyword">to</span><span>/</span><span class="keyword">from</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;sorts&nbsp;(memory)&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;sorts&nbsp;(disk)&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;<span class="keyword">rows</span><span>&nbsp;processed&nbsp;&nbsp;</span></span></li>
+</ol>
+</div>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;">可以看到，第一条语句的CG是第二条语句的近３倍，看起来应该是第一条语句的性能更好。是否真是如此？</span></p>
+<p><span id="docs-internal-guid-1b1e1d1c-ecd3-0877-1011-5bc375217731"><span style="font-size: 15px; font-family: Arial; background-color: transparent; vertical-align: baseline; white-space: pre-wrap;">那再看看这两条语句是如何构造执行的：</span></span></p>
+<div class="codeText">
+<div class="codeHead">SQL代码</div>
+<ol start="1" class="dp-sql">
+    <li class="alt"><span><span>HelloDBA.COM&gt;&nbsp;</span><span class="keyword">create</span><span>&nbsp;</span><span class="keyword">table</span><span>&nbsp;t1&nbsp;</span><span class="keyword">as</span><span>&nbsp;</span><span class="keyword">select</span><span>&nbsp;*&nbsp;</span><span class="keyword">from</span><span>&nbsp;dba_tables;&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span><span class="keyword">Table</span><span>&nbsp;created.&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>HelloDBA.COM&gt;&nbsp;<span class="keyword">create</span><span>&nbsp;</span><span class="keyword">table</span><span>&nbsp;t2&nbsp;</span><span class="keyword">as</span><span>&nbsp;</span><span class="keyword">select</span><span>&nbsp;*&nbsp;</span><span class="keyword">from</span><span>&nbsp;dba_users;&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span><span class="keyword">Table</span><span>&nbsp;created.&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>HelloDBA.COM&gt;&nbsp;<span class="keyword">exec</span><span>&nbsp;dbms_stats.gather_table_stats(</span><span class="string">'DEMO'</span><span>,&nbsp;</span><span class="string">'T1'</span><span>);&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>PL/SQL&nbsp;<span class="keyword">procedure</span><span>&nbsp;successfully&nbsp;completed.&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>HelloDBA.COM&gt;&nbsp;<span class="keyword">exec</span><span>&nbsp;dbms_stats.gather_table_stats(</span><span class="string">'DEMO'</span><span>,&nbsp;</span><span class="string">'T2'</span><span>);&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>PL/SQL&nbsp;<span class="keyword">procedure</span><span>&nbsp;successfully&nbsp;completed.&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>HelloDBA.COM&gt;&nbsp;<span class="keyword">set</span><span>&nbsp;timing&nbsp;</span><span class="keyword">on</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>HelloDBA.COM&gt;&nbsp;<span class="keyword">set</span><span>&nbsp;autot&nbsp;trace&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>HelloDBA.COM&gt;&nbsp;<span class="keyword">select</span><span>&nbsp;*&nbsp;</span><span class="keyword">from</span><span>&nbsp;t1;&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>4563&nbsp;<span class="keyword">rows</span><span>&nbsp;selected.&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>Elapsed:&nbsp;00:00:00.10&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>Execution&nbsp;Plan&nbsp;&nbsp;</span></li>
+    <li><span><span class="comment">----------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>Plan&nbsp;hash&nbsp;value:&nbsp;3617692013&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span><span class="comment">--------------------------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>|&nbsp;Id&nbsp;&nbsp;|&nbsp;Operation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;<span class="keyword">Name</span><span>&nbsp;|&nbsp;</span><span class="keyword">Rows</span><span>&nbsp;&nbsp;|&nbsp;Bytes&nbsp;|&nbsp;Cost&nbsp;(%CPU)|&nbsp;</span><span class="keyword">Time</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span><span class="comment">--------------------------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>|&nbsp;&nbsp;&nbsp;0&nbsp;|&nbsp;<span class="keyword">SELECT</span><span>&nbsp;STATEMENT&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;4563&nbsp;|&nbsp;&nbsp;1078K|&nbsp;&nbsp;&nbsp;&nbsp;49&nbsp;&nbsp;&nbsp;(0)|&nbsp;00:00:01&nbsp;|&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>|&nbsp;&nbsp;&nbsp;1&nbsp;|&nbsp;&nbsp;<span class="keyword">TABLE</span><span>&nbsp;ACCESS&nbsp;</span><span class="keyword">FULL</span><span>|&nbsp;T1&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;4563&nbsp;|&nbsp;&nbsp;1078K|&nbsp;&nbsp;&nbsp;&nbsp;49&nbsp;&nbsp;&nbsp;(0)|&nbsp;00:00:01&nbsp;|&nbsp;&nbsp;</span></span></li>
+    <li><span><span class="comment">--------------------------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span><span class="keyword">Statistics</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span><span class="comment">----------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;recursive&nbsp;calls&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;db&nbsp;block&nbsp;gets&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;460&nbsp;&nbsp;consistent&nbsp;gets&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;physical&nbsp;reads&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;redo&nbsp;<span class="keyword">size</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;1203583&nbsp;&nbsp;bytes&nbsp;sent&nbsp;via&nbsp;SQL*Net&nbsp;<span class="keyword">to</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3868&nbsp;&nbsp;bytes&nbsp;received&nbsp;via&nbsp;SQL*Net&nbsp;<span class="keyword">from</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;306&nbsp;&nbsp;SQL*Net&nbsp;roundtrips&nbsp;<span class="keyword">to</span><span>/</span><span class="keyword">from</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;sorts&nbsp;(memory)&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;sorts&nbsp;(disk)&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;<span class="keyword">rows</span><span>&nbsp;processed&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>HelloDBA.COM&gt;&nbsp;<span class="keyword">select</span><span>&nbsp;*&nbsp;</span><span class="keyword">from</span><span>&nbsp;t1,&nbsp;t2&nbsp;</span><span class="keyword">where</span><span>&nbsp;t2.username=</span><span class="string">'SYS'</span><span>;&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>4563&nbsp;<span class="keyword">rows</span><span>&nbsp;selected.&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>Elapsed:&nbsp;00:00:00.23&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>Execution&nbsp;Plan&nbsp;&nbsp;</span></li>
+    <li><span><span class="comment">----------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>Plan&nbsp;hash&nbsp;value:&nbsp;1323614827&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span><span class="comment">-----------------------------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>|&nbsp;Id&nbsp;&nbsp;|&nbsp;Operation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;<span class="keyword">Name</span><span>&nbsp;|&nbsp;</span><span class="keyword">Rows</span><span>&nbsp;&nbsp;|&nbsp;Bytes&nbsp;|&nbsp;Cost&nbsp;(%CPU)|&nbsp;</span><span class="keyword">Time</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span><span class="comment">-----------------------------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>|&nbsp;&nbsp;&nbsp;0&nbsp;|&nbsp;<span class="keyword">SELECT</span><span>&nbsp;STATEMENT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;4563&nbsp;|&nbsp;&nbsp;1581K|&nbsp;&nbsp;&nbsp;&nbsp;52&nbsp;&nbsp;&nbsp;(0)|&nbsp;00:00:01&nbsp;|&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>|&nbsp;&nbsp;&nbsp;1&nbsp;|&nbsp;&nbsp;MERGE&nbsp;<span class="op">JOIN</span><span>&nbsp;CARTESIAN|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;4563&nbsp;|&nbsp;&nbsp;1581K|&nbsp;&nbsp;&nbsp;&nbsp;52&nbsp;&nbsp;&nbsp;(0)|&nbsp;00:00:01&nbsp;|&nbsp;&nbsp;</span></span></li>
+    <li><span>|*&nbsp;&nbsp;2&nbsp;|&nbsp;&nbsp;&nbsp;<span class="keyword">TABLE</span><span>&nbsp;ACCESS&nbsp;</span><span class="keyword">FULL</span><span>&nbsp;&nbsp;|&nbsp;T2&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;|&nbsp;&nbsp;&nbsp;113&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3&nbsp;&nbsp;&nbsp;(0)|&nbsp;00:00:01&nbsp;|&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>|&nbsp;&nbsp;&nbsp;3&nbsp;|&nbsp;&nbsp;&nbsp;BUFFER&nbsp;SORT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;4563&nbsp;|&nbsp;&nbsp;1078K|&nbsp;&nbsp;&nbsp;&nbsp;49&nbsp;&nbsp;&nbsp;(0)|&nbsp;00:00:01&nbsp;|&nbsp;&nbsp;</span></li>
+    <li><span>|&nbsp;&nbsp;&nbsp;4&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">TABLE</span><span>&nbsp;ACCESS&nbsp;</span><span class="keyword">FULL</span><span>&nbsp;|&nbsp;T1&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;4563&nbsp;|&nbsp;&nbsp;1078K|&nbsp;&nbsp;&nbsp;&nbsp;49&nbsp;&nbsp;&nbsp;(0)|&nbsp;00:00:01&nbsp;|&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span><span class="comment">-----------------------------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>Predicate&nbsp;Information&nbsp;(identified&nbsp;<span class="keyword">by</span><span>&nbsp;operation&nbsp;id):&nbsp;&nbsp;</span></span></li>
+    <li><span><span class="comment">---------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;2&nbsp;-&nbsp;filter(<span class="string">&quot;T2&quot;</span><span>.</span><span class="string">&quot;USERNAME&quot;</span><span>=</span><span class="string">'SYS'</span><span>)&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span><span class="keyword">Statistics</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span><span class="comment">----------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;recursive&nbsp;calls&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;db&nbsp;block&nbsp;gets&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;167&nbsp;&nbsp;consistent&nbsp;gets&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;physical&nbsp;reads&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;redo&nbsp;<span class="keyword">size</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;267325&nbsp;&nbsp;bytes&nbsp;sent&nbsp;via&nbsp;SQL*Net&nbsp;<span class="keyword">to</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3868&nbsp;&nbsp;bytes&nbsp;received&nbsp;via&nbsp;SQL*Net&nbsp;<span class="keyword">from</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;306&nbsp;&nbsp;SQL*Net&nbsp;roundtrips&nbsp;<span class="keyword">to</span><span>/</span><span class="keyword">from</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;sorts&nbsp;(memory)&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;sorts&nbsp;(disk)&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;<span class="keyword">rows</span><span>&nbsp;processed&nbsp;&nbsp;</span></span></li>
+</ol>
+</div>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;">这两条语句并不复杂。如果我们忽略性能统计数据，我们很容易就从其语句逻辑结构或者执行计划判断出它们的性能谁优谁劣。</span></p>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;">但是为什么第二条语句的CG更少呢？</span></p>
+<p><span id="docs-internal-guid-1b1e1d1c-ecd4-a6e8-a96c-df8bb6afeaa3"><span style="font-size: 15px; font-family: Arial; background-color: transparent; vertical-align: baseline; white-space: pre-wrap;">我们对它们作SQL运行跟踪，再看格式化的跟踪结果：</span></span></p>
+<div class="codeText">
+<div class="codeHead">SQL代码</div>
+<ol start="1" class="dp-sql">
+    <li class="alt"><span><span class="keyword">Rows</span><span>&nbsp;(1st)&nbsp;</span><span class="keyword">Rows</span><span>&nbsp;(</span><span class="func">avg</span><span>)&nbsp;</span><span class="keyword">Rows</span><span>&nbsp;(</span><span class="keyword">max</span><span>)&nbsp;&nbsp;Row&nbsp;Source&nbsp;Operation&nbsp;&nbsp;</span></span></li>
+    <li><span><span class="comment">----------&nbsp;----------&nbsp;----------&nbsp;&nbsp;---------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;MERGE&nbsp;<span class="op">JOIN</span><span>&nbsp;CARTESIAN&nbsp;(cr=167&nbsp;pr=0&nbsp;pw=0&nbsp;</span><span class="keyword">time</span><span>=38433&nbsp;us&nbsp;cost=52&nbsp;</span><span class="keyword">size</span><span>=1619865&nbsp;card=4563)&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;<span class="keyword">TABLE</span><span>&nbsp;ACCESS&nbsp;</span><span class="keyword">FULL</span><span>&nbsp;T2&nbsp;(cr=3&nbsp;pr=0&nbsp;pw=0&nbsp;</span><span class="keyword">time</span><span>=78&nbsp;us&nbsp;cost=3&nbsp;</span><span class="keyword">size</span><span>=113&nbsp;card=1)&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;&nbsp;BUFFER&nbsp;SORT&nbsp;(cr=164&nbsp;pr=0&nbsp;pw=0&nbsp;<span class="keyword">time</span><span>=22958&nbsp;us&nbsp;cost=49&nbsp;</span><span class="keyword">size</span><span>=1104246&nbsp;card=4563)&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">TABLE</span><span>&nbsp;ACCESS&nbsp;</span><span class="keyword">FULL</span><span>&nbsp;T1&nbsp;(cr=164&nbsp;pr=0&nbsp;pw=0&nbsp;</span><span class="keyword">time</span><span>=11815&nbsp;us&nbsp;cost=49&nbsp;</span><span class="keyword">size</span><span>=1104246&nbsp;card=4563)&nbsp;&nbsp;</span></span></li>
+</ol>
+</div>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;">这是第二条语句的计划统计数据。显然，它包含两个部分：对T1和T2的全表扫描访问。</span></p>
+<p><span id="docs-internal-guid-1b1e1d1c-ecd5-def4-0be3-ffee1408f511"><span style="font-size: 15px; font-family: Arial; background-color: transparent; vertical-align: baseline; white-space: pre-wrap;">在该执行计划当中，T1的全表扫描的CG为164，当时为什么在第一条语句中对其的全部扫描产生的CG为466呢？这是因为数据获取数组大小（fetch array size）设置的影响。在SQLPlus当中，该设置默认值为15，如果我们将其设得足够大，CG将变为，</span></span></p>
+<div class="codeText">
+<div class="codeHead">SQL代码</div>
+<ol start="1" class="dp-sql">
+    <li class="alt"><span><span>HelloDBA.COM&gt;&nbsp;</span><span class="keyword">set</span><span>&nbsp;arraysize&nbsp;5000&nbsp;&nbsp;</span></span></li>
+    <li><span>HelloDBA.COM&gt;&nbsp;<span class="keyword">set</span><span>&nbsp;autot&nbsp;trace&nbsp;stat&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>HelloDBA.COM&gt;&nbsp;<span class="keyword">select</span><span>&nbsp;*&nbsp;</span><span class="keyword">from</span><span>&nbsp;t1;&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span><span class="keyword">Statistics</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span><span class="comment">----------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;recursive&nbsp;calls&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;db&nbsp;block&nbsp;gets&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;165&nbsp;&nbsp;consistent&nbsp;gets&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;physical&nbsp;reads&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;redo&nbsp;<span class="keyword">size</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;1147039&nbsp;&nbsp;bytes&nbsp;sent&nbsp;via&nbsp;SQL*Net&nbsp;<span class="keyword">to</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;524&nbsp;&nbsp;bytes&nbsp;received&nbsp;via&nbsp;SQL*Net&nbsp;<span class="keyword">from</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;SQL*Net&nbsp;roundtrips&nbsp;<span class="keyword">to</span><span>/</span><span class="keyword">from</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;sorts&nbsp;(memory)&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;sorts&nbsp;(disk)&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;<span class="keyword">rows</span><span>&nbsp;processed&nbsp;&nbsp;</span></span></li>
+</ol>
+</div>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;">165. 没错。因为无论该数组大小设为多大，Oracle总是在第一次读取时读取第一条记录。关于全部扫描的CG可以参考该文章了解更多细节：</span></p>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;"><a href="http://www.hellodba.com/reader.php?ID=39&amp;lang=EN">http://www.hellodba.com/reader.php?ID=39&amp;lang=EN</a></span></p>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;">&nbsp;<span style="background-color: transparent; font-family: Arial; font-size: 15px; white-space: pre-wrap; line-height: 1.15;">F2是一张小表，它的全表扫描访问产生的CG为3。</span></p>
+<p><span id="docs-internal-guid-1b1e1d1c-ecdc-5743-3544-bff85e01fd3a"><span style="font-size: 15px; font-family: Arial; background-color: transparent; vertical-align: baseline; white-space: pre-wrap;">写到这是否可以结束了呢？现在将第二条语句的过滤条件移除看看，</span></span></p>
+<div class="codeText">
+<div class="codeHead">SQL代码</div>
+<ol start="1" class="dp-sql">
+    <li class="alt"><span><span>HelloDBA.COM&gt;&nbsp;</span><span class="keyword">select</span><span>&nbsp;*&nbsp;</span><span class="keyword">from</span><span>&nbsp;t1,&nbsp;t2;&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>246402&nbsp;<span class="keyword">rows</span><span>&nbsp;selected.&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;</span></li>
+    <li><span><span class="keyword">Statistics</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span><span class="comment">----------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;recursive&nbsp;calls&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;db&nbsp;block&nbsp;gets&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;219&nbsp;&nbsp;consistent&nbsp;gets&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;physical&nbsp;reads&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;redo&nbsp;<span class="keyword">size</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;14113903&nbsp;&nbsp;bytes&nbsp;sent&nbsp;via&nbsp;SQL*Net&nbsp;<span class="keyword">to</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;181209&nbsp;&nbsp;bytes&nbsp;received&nbsp;via&nbsp;SQL*Net&nbsp;<span class="keyword">from</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;16428&nbsp;&nbsp;SQL*Net&nbsp;roundtrips&nbsp;<span class="keyword">to</span><span>/</span><span class="keyword">from</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;sorts&nbsp;(memory)&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;sorts&nbsp;(disk)&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;246402&nbsp;&nbsp;<span class="keyword">rows</span><span>&nbsp;processed&nbsp;&nbsp;</span></span></li>
+</ol>
+</div>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;">仅仅219CG？这是一个笛卡尔乘积的关联（无关联条件），怎么会是如此少的CG呢？</span></p>
+<p><span id="docs-internal-guid-1b1e1d1c-ecdc-0f8a-c4e7-06e1e5bc3f48"><span style="font-size: 15px; font-family: Arial; background-color: transparent; vertical-align: baseline; white-space: pre-wrap;"><span style="background-color: transparent;">再次</span>产生SQL跟踪文件：</span></span></p>
+<div class="codeText">
+<div class="codeHead">SQL代码</div>
+<ol start="1" class="dp-sql">
+    <li class="alt"><span><span class="keyword">Rows</span><span>&nbsp;(1st)&nbsp;</span><span class="keyword">Rows</span><span>&nbsp;(</span><span class="func">avg</span><span>)&nbsp;</span><span class="keyword">Rows</span><span>&nbsp;(</span><span class="keyword">max</span><span>)&nbsp;&nbsp;Row&nbsp;Source&nbsp;Operation&nbsp;&nbsp;</span></span></li>
+    <li><span><span class="comment">----------&nbsp;----------&nbsp;----------&nbsp;&nbsp;---------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;246402&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;246402&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;246402&nbsp;&nbsp;MERGE&nbsp;<span class="op">JOIN</span><span>&nbsp;CARTESIAN&nbsp;(cr=219&nbsp;pr=0&nbsp;pw=0&nbsp;</span><span class="keyword">time</span><span>=957833&nbsp;us&nbsp;cost=2553&nbsp;</span><span class="keyword">size</span><span>=87472710&nbsp;card=246402)&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;54&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;54&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;54&nbsp;&nbsp;&nbsp;<span class="keyword">TABLE</span><span>&nbsp;ACCESS&nbsp;</span><span class="keyword">FULL</span><span>&nbsp;T2&nbsp;(cr=55&nbsp;pr=0&nbsp;pw=0&nbsp;</span><span class="keyword">time</span><span>=728&nbsp;us&nbsp;cost=3&nbsp;</span><span class="keyword">size</span><span>=6102&nbsp;card=54)&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;246402&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;246402&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;246402&nbsp;&nbsp;&nbsp;BUFFER&nbsp;SORT&nbsp;(cr=164&nbsp;pr=0&nbsp;pw=0&nbsp;<span class="keyword">time</span><span>=433549&nbsp;us&nbsp;cost=2550&nbsp;</span><span class="keyword">size</span><span>=1104246&nbsp;card=4563)&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4563&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">TABLE</span><span>&nbsp;ACCESS&nbsp;</span><span class="keyword">FULL</span><span>&nbsp;T1&nbsp;(cr=164&nbsp;pr=0&nbsp;pw=0&nbsp;</span><span class="keyword">time</span><span>=10674&nbsp;us&nbsp;cost=47&nbsp;</span><span class="keyword">size</span><span>=1104246&nbsp;card=4563)&nbsp;&nbsp;</span></span></li>
+</ol>
+</div>
+<p><span id="docs-internal-guid-1b1e1d1c-ecdd-534a-9250-e1629f26cb90"><span style="font-size: 15px; font-family: Arial; background-color: transparent; vertical-align: baseline; white-space: pre-wrap;">T1的全表扫描的CG并未变化，T2的CG增加为55。55意味着什么？它是T2的数据记录数加一。</span></span></p>
+<div class="codeText">
+<div class="codeHead">SQL代码</div>
+<ol start="1" class="dp-sql">
+    <li class="alt"><span><span>HelloDBA.COM&gt;&nbsp;</span><span class="keyword">select</span><span>&nbsp;</span><span class="func">count</span><span>(*)&nbsp;</span><span class="keyword">from</span><span>&nbsp;t2;&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;<span class="func">COUNT</span><span>(*)&nbsp;&nbsp;</span></span></li>
+    <li><span><span class="comment">----------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;54&nbsp;&nbsp;</span></li>
+</ol>
+</div>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;">但是，笛卡尔乘积不是意味着m&times;n吗？为什么结果是m+n？</span></p>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;">实际上，Oracle确实对T1做了多次重复访问。不过，第一次访问后，读取到的数据被缓存到了私有工作区，接下来的访问就是从私有内存而非共享内存中读取数据。因此，这些访问就没有被记入CG当中。</span></p>
+<p><span id="docs-internal-guid-1b1e1d1c-ecde-e4f9-61e4-82776eb22b90"><span style="font-size: 15px; font-family: Arial; background-color: transparent; vertical-align: baseline; white-space: pre-wrap;">为了获取时间的访问次数，我们使用嵌套关联提示使其从共享内存中读取数据：</span></span></p>
+<div class="codeText">
+<div class="codeHead">SQL代码</div>
+<ol start="1" class="dp-sql">
+    <li class="alt"><span><span>HelloDBA.COM&gt;&nbsp;</span><span class="keyword">select</span><span>&nbsp;/*+use_nl(t1)&nbsp;leading(t1)*/*&nbsp;</span><span class="keyword">from</span><span>&nbsp;t1,&nbsp;t2;&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>246402&nbsp;<span class="keyword">rows</span><span>&nbsp;selected.&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>Elapsed:&nbsp;00:00:07.43&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>Execution&nbsp;Plan&nbsp;&nbsp;</span></li>
+    <li><span><span class="comment">----------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>Plan&nbsp;hash&nbsp;value:&nbsp;787647388&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span><span class="comment">-----------------------------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>|&nbsp;Id&nbsp;&nbsp;|&nbsp;Operation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;<span class="keyword">Name</span><span>&nbsp;|&nbsp;</span><span class="keyword">Rows</span><span>&nbsp;&nbsp;|&nbsp;Bytes&nbsp;|&nbsp;Cost&nbsp;(%CPU)|&nbsp;</span><span class="keyword">Time</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span><span class="comment">-----------------------------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>|&nbsp;&nbsp;&nbsp;0&nbsp;|&nbsp;<span class="keyword">SELECT</span><span>&nbsp;STATEMENT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;246K|&nbsp;&nbsp;&nbsp;&nbsp;83M|&nbsp;&nbsp;5006&nbsp;&nbsp;&nbsp;(1)|&nbsp;00:01:01&nbsp;|&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>|&nbsp;&nbsp;&nbsp;1&nbsp;|&nbsp;&nbsp;MERGE&nbsp;<span class="op">JOIN</span><span>&nbsp;CARTESIAN|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;246K|&nbsp;&nbsp;&nbsp;&nbsp;83M|&nbsp;&nbsp;5006&nbsp;&nbsp;&nbsp;(1)|&nbsp;00:01:01&nbsp;|&nbsp;&nbsp;</span></span></li>
+    <li><span>|&nbsp;&nbsp;&nbsp;2&nbsp;|&nbsp;&nbsp;&nbsp;<span class="keyword">TABLE</span><span>&nbsp;ACCESS&nbsp;</span><span class="keyword">FULL</span><span>&nbsp;&nbsp;|&nbsp;T1&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;4563&nbsp;|&nbsp;&nbsp;1078K|&nbsp;&nbsp;&nbsp;&nbsp;49&nbsp;&nbsp;&nbsp;(0)|&nbsp;00:00:01&nbsp;|&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>|&nbsp;&nbsp;&nbsp;3&nbsp;|&nbsp;&nbsp;&nbsp;BUFFER&nbsp;SORT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;54&nbsp;|&nbsp;&nbsp;6102&nbsp;|&nbsp;&nbsp;4956&nbsp;&nbsp;&nbsp;(1)|&nbsp;00:01:00&nbsp;|&nbsp;&nbsp;</span></li>
+    <li><span>|&nbsp;&nbsp;&nbsp;4&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">TABLE</span><span>&nbsp;ACCESS&nbsp;</span><span class="keyword">FULL</span><span>&nbsp;|&nbsp;T2&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;54&nbsp;|&nbsp;&nbsp;6102&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;(0)|&nbsp;00:00:01&nbsp;|&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span><span class="comment">-----------------------------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;</span></li>
+    <li><span><span class="keyword">Statistics</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span><span class="comment">----------------------------------------------------------</span><span>&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;recursive&nbsp;calls&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;db&nbsp;block&nbsp;gets&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4568&nbsp;&nbsp;consistent&nbsp;gets&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;physical&nbsp;reads&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;redo&nbsp;<span class="keyword">size</span><span>&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;16632868&nbsp;&nbsp;bytes&nbsp;sent&nbsp;via&nbsp;SQL*Net&nbsp;<span class="keyword">to</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;181209&nbsp;&nbsp;bytes&nbsp;received&nbsp;via&nbsp;SQL*Net&nbsp;<span class="keyword">from</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;16428&nbsp;&nbsp;SQL*Net&nbsp;roundtrips&nbsp;<span class="keyword">to</span><span>/</span><span class="keyword">from</span><span>&nbsp;client&nbsp;&nbsp;</span></span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;sorts&nbsp;(memory)&nbsp;&nbsp;</span></li>
+    <li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;sorts&nbsp;(disk)&nbsp;&nbsp;</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;246402&nbsp;&nbsp;<span class="keyword">rows</span><span>&nbsp;processed&nbsp;&nbsp;</span></span></li>
+</ol>
+</div>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;">尽管执行计划没有变化，但是CG的变化却相当明显。</span></p>
+<p><b style="font-weight:normal;" id="docs-internal-guid-1b1e1d1c-ed42-b3ae-463c-97321309148c"><br />
+</b></p>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;">从这个例子中可以注意到两点：</span></p>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;"> &nbsp;数据获取数组大小会影响CG；</span></p>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;"> &nbsp;CG仅包含从共享内存读取的次数；</span></p>
+<p><b style="font-weight:normal;"><br />
+</b></p>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;">测试环境为: Oracle 11.2.0.3 on Oracle Linux 5 64bit</span></p>
+<p>&nbsp;</p>
+<p dir="ltr" style="line-height:1.15;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:15px;font-family:Arial;color:#000000;background-color:transparent;font-weight:normal;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre-wrap;">--- Fuyuncat ---</span></p>
+				</td>
+			</tr>
+		</table>
+	</blockquote>
+</blockquote>
+
+<div class="Section1" style="LAYOUT-GRID:  15.6pt none">
+	<table id="table6" cellPadding="0" width="100%" border="0">
+		<tr>
+			<td align="middle" width="50%">
+			上一篇：<a id="PrevArticle" align=center style='text-align:center'  href="http://www.HelloDBA.com/reader.php?ID=213&lang=CN">Oracle 12c Hybrid Histogram</a></td>
+			<td align="middle" width="50%">
+			下一篇：<a id="NextArticle" href=""></a></td>
+		</tr>
+	</table>
+	<table id="table7" cellPadding="0" width="100%" border="0">
+		<tr>
+			<td align="middle" width="100%">
+			<a id="FullListThisClass" align=center style='text-align:center'  href="http://www.HelloDBA.com/index.php?class=DOC&lang=CN">本类中的所有文章</a></td>
+		</tr>
+	</table>
+</div>
+
+</div>
+
+<table border="0" cellpadding="0" width="100%" >
+  <tr> 
+    <td width="100%" colspan="2" align="center"> 
+      <p class="tnbb"> <b><font face="Arial"> <a style="text-decoration: none" href="#TOP"> 
+		<font color="#000080">Top</font></a><font color="#000080"> </font>
+		</font></b> </p>
+      <p class="tsb"><a style="text-decoration: none" href="http://www.HelloDBA.com/" target=_blank>
+		<font face="Arial" color="#000080" size="2">Copyright &copy;2005，HelloDBA.Com 保留一切权利
+		</font>
+        </a>
+      </p>
+      <p class="tnbb"><b><a style="TEXT-DECORATION: none" href="http://www.HelloDBA.com/reader.php?ID=117&lang=cn" target=_blank>
+		<font color="#000080">申明</font></a><font color="#000080"> </font></b>
+        <a style="TEXT-DECORATION: none" href="http://www.HelloDBA.com/SelfIntroduce.htm" target=_blank>
+		<span style="font-weight: 700" size = 1><font color="#000080"><br>
+		</font></span><span style="font-weight: 400" size = 1>
+		<font color="#000080" size="2" face="Arial">by fuyuncat</font></span></a><font size="2" color="#000080"><BR> 
+		</font> 
+	  </p>
+    </td>
+  </tr>
+</table>
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-1088511-1";
+urchinTracker();
+</script>
+</body>
+</html>

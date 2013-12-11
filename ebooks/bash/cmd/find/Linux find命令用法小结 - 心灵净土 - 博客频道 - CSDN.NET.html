@@ -1,0 +1,891 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+ 
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <title>Linux find命令用法小结 - 心灵净土
+        - 博客频道 - CSDN.NET</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="description" content="find是个使用频率比较高的命令。常常用它在系统特定目录下，查找具有某种特征【名字类型属主权限等】的文件。find命令的格式： find &#160;[-path ..] -options [-print -exec -ok]path：要查找的目录路径。~ 表示$HOME目录. 表示当前目录/ 表示根目录-print ：表示将结果输出到标准输出-exec ：对匹配的文" />
+    <script src="http://static.blog.csdn.net/scripts/jquery.js" type="text/javascript"></script>
+    <script type="text/javascript" src="http://static.blog.csdn.net/scripts/ad.js?v=1.1"></script>
+    <link rel="Stylesheet" type="text/css" href="http://static.blog.csdn.net/skin/default/css/style.css?v=1.1" />
+    <link id="RSSLink" title="RSS" type="application/rss+xml" rel="alternate" href="/love__coder/rss/list" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link type="text/css" rel="stylesheet" href="http://static.blog.csdn.net/scripts/SyntaxHighlighter/styles/default.css" />
+
+</head>
+<body>
+    <script src="http://csdnimg.cn/pubnav/js/pub_topnav_2011.js" type="text/javascript"></script>
+    <div id="container">
+        <div id="header">
+    <div class="header">
+        <div id="blog_title">
+            <h1>
+                <a href="http://blog.csdn.net/love__coder">心灵净土</a></h1>
+            <h2>我思故我在                   新浪微博：http://weibo.com/lovecoder</h2>
+            <div class="clear">
+            </div>
+        </div>
+        <div class="clear">
+        </div>
+    </div>
+</div>
+<div id="navigator">
+    <div class="navigator_bg">
+    </div>
+    <div class="navigator">
+        <ul>
+                <li id="btnContents"><a href="http://blog.csdn.net/love__coder?viewmode=contents"><span>
+                    <img src="http://static.blog.csdn.net/images/ico_list.gif">目录视图</span></a></li>
+                <li id="btnView"><a href="http://blog.csdn.net/love__coder?viewmode=list"><span>
+                    <img src="http://static.blog.csdn.net/images/ico_summary.gif">摘要视图</span></a></li>
+                <li id="btnRss"><a href="http://blog.csdn.net/love__coder/rss/list"><span>
+                    <img src="http://static.blog.csdn.net/images/ico_rss.gif">订阅</span></a></li>
+</ul>
+    </div>
+</div>
+<script type="text/javascript">
+    var username = "love__coder";
+    var _blogger = username;
+    var blog_address = "http://blog.csdn.net/love__coder";
+    var static_host = "http://static.blog.csdn.net";
+    var currentUserName = "";
+</script>
+
+        <div id="body">
+            <div id="main">
+                <div class="main">
+<div class="notice tracking-ad" data-mod='popu_3' > 
+
+<a href="http://vote.blog.csdn.net/blogstar2013"target="_blank">
+<font color=blue>CSDN2013年度博客之星评选
+ </font></a>
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+
+<a href="http://hero.pongo.cn/Question/Details?ID=168&ExamID=163" target="_blank"><font color=red>文思海辉第一届在线编程大赛
+</font></a>
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+
+<a href="http://blog.csdn.net/csdn_ask/article/details/16943685"target="_blank">
+<font color=blue>消灭0回答，赢下载分
+ </font></a>
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+
+
+<a href="http://newsletter.csdn.net/show_book/show_book_list?type=5"target="_blank">
+<font color=red>订阅CSDN社区周刊，及时了解社区精华内容
+ </font></a>
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+
+
+<a href="http://blog.csdn.net/blogdevteam/article/details/16943989"target="_blank">
+<font color=blue>办公大师系列经典丛书 诚聘译者
+ </font></a>
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+
+
+
+</div>                    <link href="http://static.blog.csdn.net/css/comment1.css" type="text/css" rel="stylesheet" />
+<link href="http://static.blog.csdn.net/css/style1.css" type="text/css" rel="stylesheet" />
+<div id="article_details" class="details">
+    <div class="article_title">
+    <span class="ico ico_type_Original"></span>
+    <h3>
+        <span class="link_title"><a href="/love__coder/article/details/7028714">
+        Linux find命令用法小结
+        </a></span>
+    </h3>
+</div>
+
+    <div class="article_manage">
+        <span class="link_categories">
+        分类：
+            <a href="/love__coder/article/category/728359">Linux</a> 
+            <a href="/love__coder/article/category/880572">shell</a> 
+        </span>
+    <span class="link_postdate">2011-12-16 11:01</span>
+    <span class="link_view" title="阅读次数">1385人阅读</span>
+    <span class="link_comments" title="评论次数"><a href="#comments">评论</a>(0)</span>
+    <span class="link_collect"><a href="javascript:void(0);" onclick="javascript:collectArticle('Linux find命令用法小结','7028714');return false;" title="收藏">收藏</a></span>
+    <span class="link_report"><a href="#report"  onclick="javascript:report(7028714,2);return false;" title="举报">举报</a></span>
+    
+</div>
+<div class="tag2box"><a href='http://www.csdn.net/tag/linux' target=_blank>linux</a><a href='http://www.csdn.net/tag/mysql' target=_blank>mysql</a><a href='http://www.csdn.net/tag/command' target=_blank>command</a><a href='http://www.csdn.net/tag/shell' target=_blank>shell</a><a href='http://www.csdn.net/tag/path' target=_blank>path</a><a href='http://www.csdn.net/tag/c' target=_blank>c</a></div>
+
+    
+<div id="article_content" class="article_content">
+
+<p><span style="white-space:pre"></span></p>
+<span style="white-space:pre"></span>find是个使用频率比较高的命令。常常用它在系统特定目录下，查找具有某种特征【名字类型属主权限等】的文件。<br>
+<span style="white-space:pre"></span>find命令的&#26684;式： find &nbsp;[-path ..] -options [-print -exec -ok]<br>
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">path：要查找的目录路径。<br>
+</blockquote>
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">~ 表示$HOME目录</blockquote>
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">. 表示当前目录</blockquote>
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">/ 表示根目录</blockquote>
+</blockquote>
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">-print ：表示将结果输出到标准输出<br>
+-exec ：对匹配的文件执行该参数所给出的shell命令。形式为 command &nbsp;{} \; ，注意{}与\; 之间有空&#26684;<br>
+-ok ：与-exec作用相同，区别在于，在执行命令之前，都会给出提示，让用户确认是否执行</blockquote>
+<br>
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">options常用的有下选项：
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">-name 按照名字查找</blockquote>
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">-perm 安装权限查找</blockquote>
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">-prune 不再当前指定的目录下查找</blockquote>
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">-user 文件属主来查找</blockquote>
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">-group 所属组来查找</blockquote>
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">-nogroup 查找无有效所属组的文件</blockquote>
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">-nouser 查找无有效属主的文件</blockquote>
+<blockquote style="margin:0 0 0 40px; border:none; padding:0px">-type 按照文件类型查找</blockquote>
+</blockquote>
+<p><span style="white-space:pre"></span>下面通过一些简单的例子来介绍下find的常规用法：<span style="white-space:pre"></span></p>
+<p><span style="white-space:pre">1、按名字查找</span></p>
+<p><span style="white-space:pre">在当前目录及子目录中，查找大写字母</span>开头的<span style="white-space:pre">txt文件</span></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost ~]# find . -name '[A-Z]*.txt' -print</pre><br>
+<span style="white-space:pre">在/etc及其子目录中，查找host开头的文件</span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost ~]# find /etc -name 'host*' -print </pre><br>
+<span style="white-space:pre">在$HOME目录及其子目录中，查找所有文件</span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost ~]# find ~ -name '*' -print</pre><span style="white-space:pre"> 在当前目录及子目录中，查找不是out开头的txt文件 </span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -name &quot;out*&quot; -prune -o -name &quot;*.txt&quot; -print  </pre><br>
+<p></p>
+<p><span style="white-space:pre"></span>2、按目录查找</p>
+<p><span style="white-space:pre">在当前目录除aa之外的子目录内搜索 txt文件</span></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -path &quot;./aa&quot; -prune -o -name &quot;*.txt&quot; -print</pre><br>
+<span style="white-space:pre">在当前目录及除aa和bb之外的子目录中查找txt文件</span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . \( -path &quot;./aa&quot; -o -path &quot;./bb&quot; \) -prune -o -name &quot;*.txt&quot; -print   </pre><br>
+<span style="white-space:pre">在当前目录，不再子目录中，查找txt文件</span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find .  ! -name &quot;.&quot; -type d -prune -o -type f -name &quot;*.txt&quot; -print</pre><span style="white-space:pre"> </span>3、按权限查找
+<p></p>
+<p><span style="white-space:pre">在当前目录及子目录中，查找属主具有读写执行，其他具有读执行</span>权限<span style="white-space:pre">的文件</span></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost ~]# find . -perm 755 -print</pre><br>
+<span style="white-space:pre"></span>4、按类型查找
+<p></p>
+<p><span style="white-space:pre">在当前目录及子目录下，查找符号链接文件 </span></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -type l -print</pre><br>
+<span style="white-space:pre"></span>5、按属主及属组
+<p></p>
+<p><span style="white-space:pre">查找属主是www的文件<span style="white-space:pre"> </span>
+</span></p>
+<p><span style="white-space:pre"></span></p>
+<pre name="code" class="plain">[root@localhost .code]# find / -user www -type f -print</pre><br>
+<span style="white-space:pre">查找属主被删除的文件</span><br>
+<p></p>
+<p><span style="white-space:pre"></span></p>
+<pre name="code" class="plain">[root@localhost .code]# find /  -nouser -type f -print </pre><br>
+查找<span style="white-space:pre">属</span>组mysql的文件
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find /  -group mysql -type f  -print</pre><br>
+<span style="white-space:pre">查找用户组被删掉的文件</span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find /  -nogroup -type f  -print   </pre><br>
+<span style="white-space:pre"></span>6、按时间查找
+<p></p>
+<p><span style="white-space:pre">查找2天内被更改过的文件</span></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -mtime -2 -type f -print </pre><br>
+<span style="white-space:pre">查找2天前被更改过的文件</span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -mtime +2 -type f -print</pre><br>
+<span style="white-space:pre">查找一天内被访问的文件</span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -atime -1 -type f -print </pre><br>
+<span style="white-space:pre">查找一天前被访问的文件</span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -atime +1 -type f -print </pre><span style="white-space:pre"> </span><br>
+<span style="white-space:pre">查找一天内状态被改变的文件</span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -ctime -1 -type f -print </pre><br>
+<span style="white-space:pre">查找一天前状态被改变的文件</span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -ctime +1 -type f -print</pre><br>
+<span style="white-space:pre">查找10分钟以前<span style="white-space:pre">状态被改变的文件</span></span><br>
+<span style="white-space:pre"></span><pre name="code" class="plain">[root@localhost .code]# find . -cmin +10 -type f -print	</pre><br>
+7、按文件新旧
+<p></p>
+<p><span style="white-space:pre">查找比aa.txt新的文件</span></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -newer &quot;aa.txt&quot;  -type f -print </pre><br>
+<span style="white-space:pre">查找比aa.txt旧的文件</span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . ! -newer &quot;aa.txt&quot;  -type f -print  </pre><br>
+<span style="white-space:pre">查找比aa.txt新，比bb.txt旧的文件</span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -newer 'aa.txt' ! -newer 'bb.txt' -type f -print </pre><br>
+<span style="white-space:pre"></span>8、按大小查找
+<p></p>
+<p><span style="white-space:pre"><span style="white-space:pre">查找超过1M的文件</span></span></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find / -size +1M -type f -print  </pre><br>
+<span style="white-space:pre">查找等于6字节的<span style="white-space:pre">文件</span></span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -size 6c -print</pre><br>
+<span style="white-space:pre">查找小于32k的<span style="white-space:pre">文件</span></span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -size -32k -print</pre><br>
+<span style="white-space:pre"></span>9、执行命令
+<p></p>
+<p><span style="white-space:pre">查找del.txt并删除，删除前提示确认</span></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -name 'del.txt' -ok rm {} \;</pre><br>
+<span style="white-space:pre">查找aa.txt 并备份为aa.txt.bak</span>
+<p></p>
+<p></p>
+<pre name="code" class="plain">[root@localhost .code]# find . -name 'aa.txt' -exec cp {} {}.bak \; </pre>
+<p><br>
+</p>
+<p>查找aa.txt 归档压缩为aa.txt.tar.gz 并删除aa.txt</p>
+<p></p>
+<pre name="code" class="plain">find . -name &quot;aa.txt&quot; -type f -exec tar -zcvf {}.tar.gz {} \; -exec rm -rf {} \; &gt; /dev/null</pre><br>
+<br>
+<p></p>
+<br>
+<p></p>
+<p><span style="white-space:pre"></span></p>
+<p><span style="white-space:pre"></span></p>
+
+</div>
+
+
+
+<!-- Baidu Button BEGIN -->
+<div id="bdshare" class="bdshare_t bds_tools get-codes-bdshare" style="float: right;">
+<a class="bds_qzone"></a>
+<a class="bds_tsina"></a>
+<a class="bds_tqq"></a>
+<a class="bds_renren"></a>
+<a class="bds_t163"></a>
+<span class="bds_more">更多</span>
+<a class="shareCount"></a>
+</div>
+<!-- Baidu Button END -->
+
+
+<!--192.168.100.34-->
+<div class="article_next_prev">
+            <li class="prev_article"><span>上一篇：</span><a href="/love__coder/article/details/7065833">Android 如何使用layoutopt检验布局文件是否合理</a></li>
+            <li class="next_article"><span>下一篇：</span><a href="/love__coder/article/details/7088808">Js 怎么自定义onResize事件监听</a></li>
+</div>
+
+<!-- Baidu Button BEGIN -->
+<script type="text/javascript" id="bdshare_js" data="type=tools&amp;uid=1536434" ></script>
+<script type="text/javascript" id="bdshell_js"></script>
+<script type="text/javascript">
+    document.getElementById("bdshell_js").src = "http://bdimg.share.baidu.com/static/js/shell_v2.js?cdnversion=" + Math.ceil(new Date()/3600000)
+</script>
+<!-- Baidu Button END -->
+
+        <div id="digg" ArticleId="7028714">
+            <dl id="btnDigg" class="digg digg_disable">
+                <dt>顶</dt>
+                <dd>0</dd>
+            </dl>
+            <dl id="btnBury" class="digg digg_disable">
+                <dt>踩</dt>
+                <dd>0</dd>
+            </dl>
+        </div>
+</div>
+    <div id="ad_cen">
+        <script type="text/javascript">            BAIDU_CLB_SLOT_ID = "117306";</script>
+        <script type="text/javascript" src="http://cbjs.baidu.com/js/o.js"></script>
+    </div>
+    <script type="text/javascript">
+        //new Ad(4, 'ad_cen');
+    </script>
+<div id="comment_title" class="panel_head">
+    查看评论<a name="comments"></a></div>
+<div id="comment_list">
+</div>
+<div id="comment_bar">
+</div>
+<div id="comment_form">
+</div>
+<div class="announce">
+    * 以上用户言论只代表其个人观点，不代表CSDN网站的观点或立场<a name="reply"></a><a name="quote"></a></div>
+<script type="text/javascript">
+    var fileName = '7028714';
+    var commentscount = 0;
+    var islock = false
+</script>
+<script type="text/javascript" src="http://static.blog.csdn.net/scripts/comment.js"></script>
+    <div id="ad_bot">
+    </div>
+    <script type="text/javascript">
+    new Ad(5, 'ad_bot');
+    </script>
+<div id="report_dialog">
+</div>
+<div id="d-top" style="display: none;">
+    <a id="d-top-a" href="#" title="回到顶部">
+        <img src="http://static.blog.csdn.net/images/top.png" alt="TOP" /></a>
+</div>
+<script type="text/javascript">
+    $(function ()
+    {
+        var d_top = $('#d-top');
+        document.onscroll = function ()
+        {
+            var scrTop = (document.body.scrollTop || document.documentElement.scrollTop);
+            if (scrTop > 500)
+            {
+                d_top.show();
+            } else
+            {
+                d_top.hide();
+            }
+        }
+        $('#d-top-a').click(function ()
+        {
+            scrollTo(0, 0);
+            this.blur();
+            return false;
+        });
+    });
+  
+</script>
+<style type="text/css">
+    .tag_list
+    {
+        background: none repeat scroll 0 0 #FFFFFF;
+        border: 1px solid #D7CBC1;
+        color: #000000;
+        font-size: 12px;
+        line-height: 20px;
+        list-style: none outside none;
+        margin: 10px 2% 0 1%;
+        padding: 1px;
+    }
+    .tag_list h5
+    {
+        background: none repeat scroll 0 0 #E0DBD3;
+        color: #47381C;
+        font-size: 12px;
+        height: 24px;
+        line-height: 24px;
+        padding: 0 5px;
+        margin: 0;
+    }
+    .tag_list h5 a
+    {
+        color: #47381C;
+    }
+    .classify
+    {
+        margin: 10px 0;
+        padding: 4px 12px 8px;
+    }
+    .classify a
+    {
+        margin-right: 20px;
+        white-space: nowrap;
+    }
+</style>
+<div class="tag_list">
+    <h5>
+        <a href="http://www.csdn.net/tag/" target="_blank">核心技术类目</a></h5>
+    <div class="classify">
+<a title="全部主题" href="http://www.csdn.net/tag" target="_blank" onclick="LogClickCount(this,336);">全部主题</a>
+<a title="Java" href="http://www.csdn.net/tag/Java" target="_blank" onclick="LogClickCount(this,336);">Java</a>
+<a title="VPN" href="http://www.csdn.net/tag/vpn" target="_blank" onclick="LogClickCount(this,336);">VPN</a>
+<a title="Android" href="http://www.csdn.net/tag/android" target="_blank" onclick="LogClickCount(this,336);">Android</a>
+<a title="iOS" href="http://www.csdn.net/tag/ios" target="_blank" onclick="LogClickCount(this,336);">iOS</a>
+<a title="ERP" href="http://www.csdn.net/tag/erp" target="_blank" onclick="LogClickCount(this,336);">ERP</a>
+<a title="IE10" href="http://www.csdn.net/tag/ie10" target="_blank" onclick="LogClickCount(this,336);">IE10</a>
+<a title="Eclipse" href="http://www.csdn.net/tag/eclipse" target="_blank" onclick="LogClickCount(this,336);">Eclipse</a>
+<a title="CRM" href="http://www.csdn.net/tag/crm" target="_blank" onclick="LogClickCount(this,336);">CRM</a>
+<a title="JavaScript" href="http://www.csdn.net/tag/javascript" target="_blank" onclick="LogClickCount(this,336);">JavaScript</a>
+<a title="Ubuntu" href="http://www.csdn.net/tag/ubuntu" target="_blank" onclick="LogClickCount(this,336);">Ubuntu</a>
+<a title="NFC" href="http://www.csdn.net/tag/nfc" target="_blank" onclick="LogClickCount(this,336);">NFC</a>
+<a title="WAP" href="http://www.csdn.net/tag/wap" target="_blank" onclick="LogClickCount(this,336);">WAP</a>
+<a title="jQuery" href="http://www.csdn.net/tag/jquery" target="_blank" onclick="LogClickCount(this,336);">jQuery</a>
+<a title="数据库" href="http://www.csdn.net/tag/数据库" target="_blank" onclick="LogClickCount(this,336);">数据库</a>
+<a title="BI" href="http://www.csdn.net/tag/bi" target="_blank" onclick="LogClickCount(this,336);">BI</a>
+<a title="HTML5" href="http://www.csdn.net/tag/html5" target="_blank" onclick="LogClickCount(this,336);">HTML5</a>
+<a title="Spring" href="http://www.csdn.net/tag/spring" target="_blank" onclick="LogClickCount(this,336);">Spring</a>
+<a title="Apache" href="http://www.csdn.net/tag/apache" target="_blank" onclick="LogClickCount(this,336);">Apache</a>
+<a title="Hadoop" href="http://www.csdn.net/tag/hadoop" target="_blank" onclick="LogClickCount(this,336);">Hadoop</a>
+<a title=".NET" href="http://www.csdn.net/tag/.net" target="_blank" onclick="LogClickCount(this,336);">.NET</a>
+<a title="API" href="http://www.csdn.net/tag/api" target="_blank" onclick="LogClickCount(this,336);">API</a>
+<a title="HTML" href="http://www.csdn.net/tag/html" target="_blank" onclick="LogClickCount(this,336);">HTML</a>
+<a title="SDK" href="http://www.csdn.net/tag/sdk" target="_blank" onclick="LogClickCount(this,336);">SDK</a>
+<a title="IIS" href="http://www.csdn.net/tag/iis" target="_blank" onclick="LogClickCount(this,336);">IIS</a>
+<a title="Fedora" href="http://www.csdn.net/tag/fedora" target="_blank" onclick="LogClickCount(this,336);">Fedora</a>
+<a title="XML" href="http://www.csdn.net/tag/xml" target="_blank" onclick="LogClickCount(this,336);">XML</a>
+<a title="LBS" href="http://www.csdn.net/tag/lbs" target="_blank" onclick="LogClickCount(this,336);">LBS</a>
+<a title="Unity" href="http://www.csdn.net/tag/unity" target="_blank" onclick="LogClickCount(this,336);">Unity</a>
+<a title="Splashtop" href="http://www.csdn.net/tag/splashtop" target="_blank" onclick="LogClickCount(this,336);">Splashtop</a>
+<a title="UML" href="http://www.csdn.net/tag/uml" target="_blank" onclick="LogClickCount(this,336);">UML</a>
+<a title="components" href="http://www.csdn.net/tag/components" target="_blank" onclick="LogClickCount(this,336);">components</a>
+<a title="Windows Mobile" href="http://www.csdn.net/tag/windowsmobile" target="_blank" onclick="LogClickCount(this,336);">Windows Mobile</a>
+<a title="Rails" href="http://www.csdn.net/tag/rails" target="_blank" onclick="LogClickCount(this,336);">Rails</a>
+<a title="QEMU" href="http://www.csdn.net/tag/qemu" target="_blank" onclick="LogClickCount(this,336);">QEMU</a>
+<a title="KDE" href="http://www.csdn.net/tag/kde" target="_blank" onclick="LogClickCount(this,336);">KDE</a>
+<a title="Cassandra" href="http://www.csdn.net/tag/cassandra" target="_blank" onclick="LogClickCount(this,336);">Cassandra</a>
+<a title="CloudStack" href="http://www.csdn.net/tag/cloudstack" target="_blank" onclick="LogClickCount(this,336);">CloudStack</a>
+<a title="FTC" href="http://www.csdn.net/tag/ftc" target="_blank" onclick="LogClickCount(this,336);">FTC</a>
+<a title="coremail" href="http://www.csdn.net/tag/coremail" target="_blank" onclick="LogClickCount(this,336);">coremail</a>
+<a title="OPhone " href="http://www.csdn.net/tag/ophone " target="_blank" onclick="LogClickCount(this,336);">OPhone </a>
+<a title="CouchBase" href="http://www.csdn.net/tag/couchbase" target="_blank" onclick="LogClickCount(this,336);">CouchBase</a>
+<a title="云计算" href="http://www.csdn.net/tag/云计算" target="_blank" onclick="LogClickCount(this,336);">云计算</a>
+<a title="iOS6" href="http://www.csdn.net/tag/iOS6" target="_blank" onclick="LogClickCount(this,336);">iOS6</a>
+<a title="Rackspace " href="http://www.csdn.net/tag/rackspace " target="_blank" onclick="LogClickCount(this,336);">Rackspace </a>
+<a title="Web App" href="http://www.csdn.net/tag/webapp" target="_blank" onclick="LogClickCount(this,336);">Web App</a>
+<a title="SpringSide" href="http://www.csdn.net/tag/springside" target="_blank" onclick="LogClickCount(this,336);">SpringSide</a>
+<a title="Maemo" href="http://www.csdn.net/tag/maemo" target="_blank" onclick="LogClickCount(this,336);">Maemo</a>
+<a title="Compuware" href="http://www.csdn.net/tag/compuware" target="_blank" onclick="LogClickCount(this,336);">Compuware</a>
+<a title="大数据" href="http://www.csdn.net/tag/大数据" target="_blank" onclick="LogClickCount(this,336);">大数据</a>
+<a title="aptech" href="http://www.csdn.net/tag/aptech" target="_blank" onclick="LogClickCount(this,336);">aptech</a>
+<a title="Perl" href="http://www.csdn.net/tag/perl" target="_blank" onclick="LogClickCount(this,336);">Perl</a>
+<a title="Tornado" href="http://www.csdn.net/tag/tornado" target="_blank" onclick="LogClickCount(this,336);">Tornado</a>
+<a title="Ruby" href="http://www.csdn.net/tag/ruby" target="_blank" onclick="LogClickCount(this,336);">Ruby</a>
+<a title="Hibernate" href="http://www.csdn.net/hibernate" target="_blank" onclick="LogClickCount(this,336);">Hibernate</a>
+<a title="ThinkPHP" href="http://www.csdn.net/tag/thinkphp" target="_blank" onclick="LogClickCount(this,336);">ThinkPHP</a>
+<a title="Spark" href="http://www.csdn.net/tag/spark" target="_blank" onclick="LogClickCount(this,336);">Spark</a>
+<a title="HBase" href="http://www.csdn.net/tag/hbase" target="_blank" onclick="LogClickCount(this,336);">HBase</a>
+<a title="Pure" href="http://www.csdn.net/tag/pure" target="_blank" onclick="LogClickCount(this,336);">Pure</a>
+<a title="Solr" href="http://www.csdn.net/tag/solr" target="_blank" onclick="LogClickCount(this,336);">Solr</a>
+<a title="Angular" href="http://www.csdn.net/tag/angular" target="_blank" onclick="LogClickCount(this,336);">Angular</a>
+<a title="Cloud Foundry" href="http://www.csdn.net/tag/cloudfoundry" target="_blank" onclick="LogClickCount(this,336);">Cloud Foundry</a>
+<a title="Redis" href="http://www.csdn.net/tag/redis" target="_blank" onclick="LogClickCount(this,336);">Redis</a>
+<a title="Scala" href="http://www.csdn.net/tag/scala" target="_blank" onclick="LogClickCount(this,336);">Scala</a>
+<a title="Django" href="http://www.csdn.net/tag/django" target="_blank" onclick="LogClickCount(this,336);">Django</a>
+<a title="Bootstrap" href="http://www.csdn.net/tag/bootstrap" target="_blank" onclick="LogClickCount(this,336);">Bootstrap</a>
+    </div>
+</div>
+
+                    <div class="clear">
+                    </div>
+                </div>
+            </div>
+            <div id="side">
+    <div class="side">
+<div id="panel_Profile" class="panel">
+<ul class="panel_head"><span>个人资料</span></ul>
+<ul class="panel_body profile">
+<div id="blog_userface">
+    <a href="http://my.csdn.net/love__coder" target="_blank">
+    <img src="http://avatar.csdn.net/F/A/2/1_love__coder.jpg" title="访问我的空间" style="max-width:90%"/>
+    </a>
+    <br />
+    <span><a href="http://my.csdn.net/love__coder" class="user_name" target="_blank">love__coder</a></span>
+</div>
+<div class="interact">
+<a href="javascript:void(0);" class="attent" id="span_add_follow" title="[加关注]"></a>
+<a href="javascript:void(0);" class="letter" onclick="loginto(1)" title="[发私信]"></a>
+</div>
+<div id="blog_medal">
+</div>
+<ul id="blog_rank">
+    <li>访问：<span>209495次</span></li>
+    <li>积分：<span>4578分</span></li>
+    <li>排名：<span>第1264名</span></li>
+</ul>
+<ul id="blog_statistics">
+    <li>原创：<span>248篇</span></li>
+    <li>转载：<span>12篇</span></li>
+    <li>译文：<span>0篇</span></li>
+    <li>评论：<span>91条</span></li>
+</ul>
+</ul>
+</div>
+
+
+<div class="panel" id="panel_Search">
+    <ul class="panel_head"><span>文章搜索</span></ul>
+    <ul class="panel_body">
+        <form id="frmSearch" action="http://so.csdn.net/search" class="form_search" target="_blank">
+        <span><input id="inputSearch" type="text" class="blogsearch" title="请输入关键字" /></span>
+        <input id="btnSubmit" type="submit" value="搜索" title="search in blog" />
+        <input type="hidden" name="q" id="inputQ" />
+        <input type="hidden" name="t" value="blog" />
+        <a id="btnSearchBlog" target="_blank"></a>
+        </form>
+    </ul>
+</div><div id="panel_Category" class="panel">
+<ul class="panel_head"><span>文章分类</span></ul>
+<ul class="panel_body">
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/755431">.Net</a><span>(17)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/832352">Android</a><span>(44)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/715682">C#</a><span>(30)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/766361">CI</a><span>(6)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/722489">CSS</a><span>(7)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/724036">ERP</a><span>(1)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/617014">Flash</a><span>(1)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/722340">HappFriday</a><span>(1)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/723911">Html</a><span>(6)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/715760">Js</a><span>(30)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/728359">Linux</a><span>(50)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/729599">Nginx</a><span>(13)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/720895">Php</a><span>(34)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/722378">SEO</a><span>(3)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/523637">SQL</a><span>(15)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/722353">个人开发软件产品</a><span>(1)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/715633">工具</a><span>(12)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/717744">搜索引擎</a><span>(4)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/567487">网络</a><span>(6)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/859766">异步多线程</a><span>(1)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/879760">系统架构</a><span>(2)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/879763">Hadoop</a><span>(0)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/879764">C/C++</a><span>(9)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/880572">shell</a><span>(16)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/880901">bat</a><span>(5)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/937072">Java</a><span>(1)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/1059481">算法/数据结构</a><span>(8)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/1059482">html5</a><span>(0)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/1104398">运维</a><span>(17)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/1299594">NoSQL</a><span>(12)</span>
+</li>
+<li>
+<a href="http://blog.csdn.net/love__coder/article/category/1304162">Redis</a><span>(11)</span>
+</li>
+</ul>
+</div><div id="panel_Archive" class="panel">
+<ul class="panel_head"><span>文章存档</span></ul>
+<ul class="panel_body">
+<div id="archive_list">
+<!--归档统计-->
+<li><a href="http://blog.csdn.net/love__coder/article/month/2013/04">2013年04月</a><span>(2)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2013/03">2013年03月</a><span>(5)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2013/01">2013年01月</a><span>(2)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2012/12">2012年12月</a><span>(6)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2012/11">2012年11月</a><span>(1)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2012/10">2012年10月</a><span>(1)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2012/09">2012年09月</a><span>(3)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2012/08">2012年08月</a><span>(7)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2012/07">2012年07月</a><span>(3)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2012/06">2012年06月</a><span>(5)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2012/05">2012年05月</a><span>(5)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2012/04">2012年04月</a><span>(3)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2012/03">2012年03月</a><span>(2)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2012/02">2012年02月</a><span>(12)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2012/01">2012年01月</a><span>(4)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2011/12">2011年12月</a><span>(6)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2011/11">2011年11月</a><span>(18)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2011/10">2011年10月</a><span>(17)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2011/09">2011年09月</a><span>(14)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2011/08">2011年08月</a><span>(21)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2011/07">2011年07月</a><span>(14)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2011/05">2011年05月</a><span>(2)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2011/04">2011年04月</a><span>(3)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2011/03">2011年03月</a><span>(8)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2011/01">2011年01月</a><span>(2)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2010/12">2010年12月</a><span>(8)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2010/11">2010年11月</a><span>(12)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2010/10">2010年10月</a><span>(5)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2010/09">2010年09月</a><span>(28)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2010/08">2010年08月</a><span>(32)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2010/07">2010年07月</a><span>(7)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2009/07">2009年07月</a><span>(1)</span></li><li><a href="http://blog.csdn.net/love__coder/article/month/2009/03">2009年03月</a><span>(1)</span></li>
+</div>
+</ul>
+</div>
+<div id="hotarticls" class="panel">
+<ul class="panel_head"><span>阅读排行</span></ul>
+<ul class="panel_body itemlist">
+<li>
+<a href="/love__coder/article/details/6690420" title="Android 如何对sqlite数据库进行增删改[insert、update和delete] 操作">Android 如何对sqlite数据库进行增删改[insert、update和delete] 操作</a><span>(10985)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/6659103" title="vim 树形目录插件NERDTree安装及简单用法">vim 树形目录插件NERDTree安装及简单用法</a><span>(7367)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/6894566" title="linux 怎么完全卸载mysql数据库">linux 怎么完全卸载mysql数据库</a><span>(7168)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/7261193" title="Shell if语句用法小结">Shell if语句用法小结</a><span>(5943)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/6765533" title="Android 如何用HttpClient 以Post方式提交数据并添加http头信息">Android 如何用HttpClient 以Post方式提交数据并添加http头信息</a><span>(4514)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/6916207" title="Android Camera拍照常见问题小结">Android Camera拍照常见问题小结</a><span>(3795)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/6587922" title="查看服务器上安装的nginx版本号">查看服务器上安装的nginx版本号</a><span>(3191)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/6765720" title="Android如何解析json数组对象">Android如何解析json数组对象</a><span>(2994)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/7532616" title="Js 怎么遍历json对象所有key及根据动态key获取值">Js 怎么遍历json对象所有key及根据动态key获取值</a><span>(2791)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/5997896" title="linux 查看文件详细信息">linux 查看文件详细信息</a><span>(2703)</span>
+</li>
+</ul>
+</div>
+<div id="hotarticls2" class="panel">
+<ul class="panel_head"><span>评论排行</span></ul>
+<ul class="panel_body itemlist">
+<li>
+<a href="/love__coder/article/details/6916207" title="Android Camera拍照常见问题小结">Android Camera拍照常见问题小结</a><span>(10)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/6923579" title="Android 怎么退出整个应用程序？">Android 怎么退出整个应用程序？</a><span>(7)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/8767023" title="PHP正则替换preg_replace">PHP正则替换preg_replace</a><span>(6)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/7022122" title="Android 如何实现分享图片功能">Android 如何实现分享图片功能</a><span>(4)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/6971590" title="Android 以singleInstance模式加载的Activity怎么接收以putExtra方式传递过来参数">Android 以singleInstance模式加载的Activity怎么接收以putExtra方式传递过来参数</a><span>(4)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/6678182" title="Android ImageView控件的MaxWidth、MaxHeight不起作用">Android ImageView控件的MaxWidth、MaxHeight不起作用</a><span>(3)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/6765673" title="Android 如何用HttpClient 以Get方式获取数据并添加http头信息">Android 如何用HttpClient 以Get方式获取数据并添加http头信息</a><span>(3)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/6981605" title="php 怎么确保两个函数被调用的顺序">php 怎么确保两个函数被调用的顺序</a><span>(3)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/6691473" title="linux的apache web服务器启动、停止及重启命令">linux的apache web服务器启动、停止及重启命令</a><span>(2)</span>
+</li>
+<li>
+<a href="/love__coder/article/details/7065833" title="Android 如何使用layoutopt检验布局文件是否合理">Android 如何使用layoutopt检验布局文件是否合理</a><span>(2)</span>
+</li>
+</ul>
+</div>
+<div id="homepageArticles" class="panel tracking-ad" data-mod="popu_4">
+<ul class="panel_head"><span>推荐文章</span></ul>
+<ul class="panel_body" id="ad_commend"></ul>
+</div>
+<script type="text/javascript">
+ new Ad(12, 'ad_commend');
+</script><div id="newcomments" class="panel">
+<ul class="panel_head"><span>最新评论</span></ul>
+<ul class="panel_body itemlist">
+    <li>
+    <a href="/love__coder/article/details/8767023#comments">PHP正则替换preg_replace</a>
+    <p style="margin:0px;"><a href="/kegone" class="user_name">kegone</a>:
+http://bbs.csdn.net/topics/390656323帮我看看。我的问题。可以吗。...
+    </p>
+    </li>
+    <li>
+    <a href="/love__coder/article/details/6894566#comments">linux 怎么完全卸载mysql数据库</a>
+    <p style="margin:0px;"><a href="/mchdba" class="user_name">mchdba</a>:
+适用于源码安装吗？
+    </p>
+    </li>
+    <li>
+    <a href="/love__coder/article/details/7262307#comments">Android 怎么判断手机是否联网</a>
+    <p style="margin:0px;"><a href="/zhangzhilai8" class="user_name">zhangzhilai8</a>:
+对我有用
+    </p>
+    </li>
+    <li>
+    <a href="/love__coder/article/details/6765673#comments">Android 如何用HttpClient 以Get方式获取数据并添加http头信息</a>
+    <p style="margin:0px;"><a href="/chang_xing" class="user_name">chang_xing</a>:
+@BuleRiver:神马原因呀？我也准备做
+    </p>
+    </li>
+    <li>
+    <a href="/love__coder/article/details/7284254#comments">Js 判断浏览器类型</a>
+    <p style="margin:0px;"><a href="/stone548534" class="user_name">stone548534</a>:
+楼主博学啊， 顶一个
+    </p>
+    </li>
+    <li>
+    <a href="/love__coder/article/details/6765533#comments">Android 如何用HttpClient 以Post方式提交数据并添加http头信息</a>
+    <p style="margin:0px;"><a href="/babadebaba" class="user_name">babadebaba</a>:
+服务器端呢
+    </p>
+    </li>
+    <li>
+    <a href="/love__coder/article/details/6916207#comments">Android Camera拍照常见问题小结</a>
+    <p style="margin:0px;"><a href="/loader" class="user_name">loader</a>:
+2、预览图像被拉伸变形这个问题，您能否给详细的说说啊，尝试了很长时间没有搞定
+    </p>
+    </li>
+    <li>
+    <a href="/love__coder/article/details/8767023#comments">PHP正则替换preg_replace</a>
+    <p style="margin:0px;"><a href="/fog001" class="user_name">fog001</a>:
+@Love__Coder:没事，加油吧！
+    </p>
+    </li>
+    <li>
+    <a href="/love__coder/article/details/8767023#comments">PHP正则替换preg_replace</a>
+    <p style="margin:0px;"><a href="/Love__Coder" class="user_name">Love__Coder</a>:
+@fog001:见笑了，惭愧！！！！
+    </p>
+    </li>
+    <li>
+    <a href="/love__coder/article/details/8767023#comments">PHP正则替换preg_replace</a>
+    <p style="margin:0px;"><a href="/fog001" class="user_name">fog001</a>:
+@Love__Coder:呵呵，是的。
+    </p>
+    </li>
+</ul>
+</div>
+<div id="custom_column_990589" class="panel">
+<ul class="panel_head"><span>.net</span></ul>
+<ul class="panel_body">
+
+<ul>
+<li><a href="http://www.frankxulei.com/" target="_blank">徐雷[wcf]</a></li><li><a href="http://artech.cnblogs.com/" target="_blank">蒋金楠</a></li><li><a href="http://www.cnblogs.com/foundation/category/212587.html" target="_blank">Workflow Foundation
+</a></li><li><a href="http://www.cnblogs.com/wbqsln/" target="_blank">兵兵</a></li><li><a href="http://blog.csdn.net/andrew_85/archive/2010/08/13/5810179.aspx" target="_blank">山里来的鱼</a></li><li><a href="http://dbanotes.net/" target="_blank">淘宝冯大辉</a></li><li><a href="http://www.cnblogs.com/lovecindywang/" target="_blank">并行计算lovecindywang</a></li><li><a href="http://kb.cnblogs.com/zt/linq/" target="_blank">linq博客园专题</a></li><li><a href="http://www.cnblogs.com/n-pei/" target="_blank">爱因斯坦的小脑</a></li></ul>
+
+</ul>
+</div><div id="custom_column_990590" class="panel">
+<ul class="panel_head"><span>Android</span></ul>
+<ul class="panel_body">
+
+<ul>
+<li><a href="http://blog.csdn.net/program_think/article/details/6696706" target="_blank">编程随想</a>
+</li><li><a href="http://blog.csdn.net/Android_Tutor/article/category/674246" target="_blank">Android_Tutor</a>
+</li><li><a href="http://blog.csdn.net/hellogv" target="_blank">hellogv</a> </li><li><a href="http://blog.csdn.net/Luoshengyang/" target="_blank">老罗的Android之旅</a>
+</li><li><a href="http://blog.csdn.net/chenjie19891104/article/category/756236/1" target="_blank">chenjie19891104</a>
+</li><li><a href="http://android.yaohuiji.com/about" target="_blank">姚辉乾</a> </li><li><a href="http://blog.csdn.net/xys289187120" target="_blank">雨松MOMO</a> </li><li><a href="http://blog.csdn.net/tangcheng_ok" target="_blank">tangcheng_ok</a> </li><li><a href="http://blog.csdn.net/iamlazybone" target="_blank">iamlazybone</a> </li><li><a href="http://blog.csdn.net/xys289187120" target="_blank">xys289187120</a> </li><li><a href="https://www.codeaurora.org/" target="_blank">code aurora</a> </li><li><a href="http://www.cnblogs.com/guoshiandroid/" target="_blank">国士工作室</a> </li></ul>
+
+</ul>
+</div><div id="custom_column_990591" class="panel">
+<ul class="panel_head"><span>html CSS</span></ul>
+<ul class="panel_body">
+
+<ul>
+<li><a href="http://www.zhangxinxu.com/wordpress/" target="_blank">zhangxinxu</a>
+</li><li><a href="http://dev.w3.org/html5/spec/Overview.html" target="_blank">html5官网标准</a>
+</li><li><a href="http://html5doctor.com/" target="_blank">HTML5 医生</a> </li><li><a href="http://www.w3.org/TR/2008/WD-html5-diff-20080122/">HTML 5与HTML 4差异</a>
+</li><li><a href="http://www.smashingmagazine.com/2009/07/06/html-5-cheat-sheet-pdf/" target="_blank">HTML 5的特性一览表</a>
+</li><li><a href="http://www.findmebyip.com/litmus/#target-selector" target="_blank">HTML5和CSS3支持</a>
+</li><li><a href="http://dev.w3.org/html5/html-author/" target="_blank">HTML5Web开发人员的指南</a>
+</li><li><a href="http://csszengarden.com/" target="_blank">csszengarden</a> </li><li><a href="http://learning.artech.cn/" target="_blank">前沿视频教室</a> </li><li><a href="http://www.alistapart.com/" target="_blank">alistapart</a> </li></ul>
+
+</ul>
+</div><div id="custom_column_990592" class="panel">
+<ul class="panel_head"><span>Lamp</span></ul>
+<ul class="panel_body">
+
+<ul>
+<li><a href="http://blog.csdn.net/heiyeshuwu" target="_blank">黑夜路人</a> </li><li><a href="http://www.imysql.com/" target="_blank">mysql中文网-叶金荣</a> </li><li><a href="http://www.phpv.net/" target="_blank">php5研究室</a> </li><li><a href="http://www.cnblogs.com/wingle/" target="_blank">wingle</a> </li><li><a href="http://www.phppan.com/" target="_blank">PHP学习笔记-胖子的空间</a> </li><li><a href="http://wiki.nginx.org/NginxChs" target="_blank">nginx官网中文维基</a> </li><li><a href="http://codeigniter.org.cn/user_guide/index.html" target="_blank">CI用户指南</a>
+</li><li><a href="http://php100.com/" target="_blank">php100</a> </li><li><a href="http://blog.csdn.net/erazy0" target="_blank">大忽悠</a> </li><li><a href="http://www.laruence.com/" target="_blank">风雪之隅</a> </li><li><a href="http://typecho.org/" target="_blank">typecho</a> </li><li><a href="http://www.open-open.com/" target="_blank">Open-open</a> </li><li><a href="http://blog.s135.com/" target="_blank">张宴</a> </li></ul>
+
+</ul>
+</div><div id="custom_column_990593" class="panel">
+<ul class="panel_head"><span>Other</span></ul>
+<ul class="panel_body">
+
+<ul>
+<li><a href="http://blog.csdn.net/historyasamirror" target="_blank">智障大师</a></li><li><a href="http://msdn.itellyou.cn/" target="_blank">微软资源</a></li><li><a href="http://rednaxelafx.iteye.com/blog/453813" target="_blank">阿里牛人</a></li><li><a href="http://coolshell.cn/" target="_blank">酷壳</a> </li><li><a href="http://blog.sina.com.cn/s/articlelist_1736173915_0_1.html" target="_blank">啃饼的博客</a>
+</li><li><a href="http://www.php.net/manual/zh/" target="_blank">php官网手册</a> </li><li><a href="http://blog.csdn.net/pennyliang" target="_blank">梁斌</a> </li><li><a href="http://www.linuxsir.org/main/" target="_blank">linuxsi</a> </li><li><a href="http://blog.csdn.net/qinmaofan" target="_blank">qinmaofan</a> </li></ul>
+
+</ul>
+</div><div id="custom_column_990594" class="panel">
+<ul class="panel_head"><span>资料网站</span></ul>
+<ul class="panel_body">
+
+<ul>
+<li><a href="http://blog.csdn.net/soso_blog" target="_blank">腾讯soso</a> </li><li><a href="http://learn.akae.cn/media/index.html" target="_blank">Linux C编程</a>
+</li><li><a href="http://www.gnu.org/software/" target="_blank">gnu soft</a> </li><li><a href="http://soft.vpser.net/" target="_blank">vpser</a> </li><li><a href="http://www.phpzy.com/" target="_blank">phpzy</a> </li><li><a href="http://net.pku.edu.cn/~yhf/linux_c/" target="_blank">Linux C函数参考手册</a>
+</li><li><a href="http://www.ppurl.com/" target="_blank">皮皮书屋</a> </li><li><a href="http://www.linuxdiyf.com/bbs/index.php" target="_blank">linux110</a>
+</li><li><a href="http://www.uml.org.cn/oobject/OObject.asp" target="_blank">uml建模</a>
+</li></ul>
+
+</ul>
+</div>    </div>
+    <div class="clear">
+    </div>
+</div>
+
+            <div class="clear">
+            </div>
+        </div>
+        
+
+<script type="text/javascript" src="http://static.blog.csdn.net/scripts/newblog.min.js"></script>
+<script type="text/javascript" src="http://medal.blog.csdn.net/showblogmedal.ashx?blogid=429804"></script>
+<script type="text/javascript">
+    document.write('<script type="text/javascript" src="http://csdnimg.cn/pubfooter/js/publib_footer.js?' + Math.floor(new Date() / 120000).toString(36) + '="></' + 'script>');
+</script>
+    <script type="text/javascript" src="http://pass.csdn.net/content/loginbox/login.js"></script>
+<script type="text/javascript">document.write("<img src=http://counter.csdn.net/pv.aspx?id=24 border=0 width=0 height=0>");</script>
+<script type="text/javascript" src="http://www.csdn.net/ui/scripts/Csdn/counter.js"></script>
+<script type="text/javascript" src="http://ad.csdn.net/scripts/ad-blog.js"></script>
+<script type="text/javascript" src="http://zz.csdn.net/js/count.js"></script>
+<script type="text/javascript">
+    $(function () {
+        function __get_code_toolbar(snippet_id) {
+            return $("<a href='https://code.csdn.net/snippets/"
+                    + snippet_id
+                    + "' target='_blank' title='在CODE上查看代码片' style='text-indent:0;'><img src='https://code.csdn.net/assets/CODE_ico.png' width=12 height=12 alt='在CODE上查看代码片' style='position:relative;top:1px;left:2px;'/></a>"
+                    + "<a href='https://code.csdn.net/snippets/"
+                    + snippet_id
+                    + "/fork' target='_blank' title='派生到我的代码片'  style='text-indent:0;'><img src='https://code.csdn.net/assets/ico_fork.svg' width=12 height=12 alt='派生到我的代码片' style='position:relative;top:2px;left:2px;'/></a>");
+        }
+        
+        $("[code_snippet_id]").each(function () {
+            __s_id = $(this).attr("code_snippet_id");
+            if (__s_id != null && __s_id != "" && __s_id != 0 && parseInt(__s_id) > 70020) {
+                __code_tool = __get_code_toolbar(__s_id);
+                $(this).prev().find(".tools").append(__code_tool);
+            }
+        });
+    });
+</script>
+
+    </div>
+</body>
+</html>

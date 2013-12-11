@@ -1,0 +1,1165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="Description" content="跳跃式索引(Skip Scan Index)的浅析">
+<meta name="Keywords" content="HelloDBA, DBA, Oracle, SQL Server, Database, DB, fuyuncat, 数据库, 调优, 备份, 方案, RAC, SQL Tuning, Performance Tuning, NON-SQL">
+<meta name="verify-v1" content="UlS54e6QG2YvdDUYce2K6e1LeDvv4Ff8CJ4WhHWynyw=" >
+<style type="text/css"><!--A:hover { color:red;} A:link { color:blue; }--></style>
+<title>跳跃式索引(Skip Scan Index)的浅析 [HelloDBA.COM]</title>
+<link rel="stylesheet" type="text/css" href="mspstyle.css">
+<script type="text/javascript" src="http://s7.addthis.com/js/152/addthis_widget.js"></script>
+<!-- AddThis Bookmark Button BEGIN -->
+<script type="text/javascript">
+  addthis_url    = location.href;   
+  addthis_title  = document.title;  
+  addthis_pub    = 'HelloDBA';     
+</script>
+<script type="text/javascript" src="http://s7.addthis.com/js/addthis_widget.php?v=12" ></script>
+<!-- AddThis Bookmark Button END -->
+<link rel="stylesheet" href="http://www.HelloDBA.com/insertcode.css">
+
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="chmetcnv"/>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="chsdate"/>
+<!-- begin theme CSS -->
+<style type="text/css">
+<!--
+.spBody {
+  color: #000000;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spFrameBody {
+  background-color: #e7e7e7;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spFrameBorder {
+  background-color: #000000;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spFrameTitle {
+  background-color: #527bad;
+  color: #FFFFFF;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+  font-weight: bold;
+}
+.spFrameTitleLink:link {
+  color: #FFFFFF;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spHead {
+  color: #000000;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spLink {
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spLink:active {
+  color: #e6e6e6;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spLink:link {
+  color: #527bad;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spLink:visited {
+  color: #999999;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+
+ /* Font Definitions */
+ @font-face
+	{font-family:宋体;
+	panose-1:2 1 6 0 3 1 1 1 1 1;
+	mso-font-alt:SimSun;
+	mso-font-charset:134;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+@font-face
+	{font-family:新宋体;
+	panose-1:2 1 6 9 3 1 1 1 1 1;
+	mso-font-charset:134;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+@font-face
+	{font-family:"\@宋体";
+	panose-1:2 1 6 0 3 1 1 1 1 1;
+	mso-font-charset:134;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+@font-face
+	{font-family:"\@新宋体";
+	panose-1:2 1 6 9 3 1 1 1 1 1;
+	mso-font-charset:134;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0cm;
+	margin-bottom:.0001pt;
+	text-align:justify;
+	text-justify:inter-ideograph;
+	mso-pagination:none;
+	font-size:10.5pt;
+	mso-bidi-font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:宋体;
+	mso-font-kerning:1.0pt;}
+h1
+	{mso-style-next:正文;
+	margin-top:17.0pt;
+	margin-right:0cm;
+	margin-bottom:16.5pt;
+	margin-left:0cm;
+	text-align:justify;
+	text-justify:inter-ideograph;
+	line-height:240%;
+	mso-pagination:lines-together;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:22.0pt;
+	font-family:"Times New Roman";
+	mso-font-kerning:22.0pt;}
+span.SpellE
+	{mso-style-name:"";
+	mso-spl-e:yes;}
+span.GramE
+	{mso-style-name:"";
+	mso-gram-e:yes;}
+ /* Page Definitions */
+ @page
+	{mso-page-border-surround-header:no;
+	mso-page-border-surround-footer:no;}
+@page Section1
+	{size:595.3pt 841.9pt;
+	margin:72.0pt 90.0pt 72.0pt 90.0pt;
+	mso-header-margin:42.55pt;
+	mso-footer-margin:49.6pt;
+	mso-paper-source:0;
+	layout-grid:15.6pt;}
+div.Section1
+	{page:Section1;}
+
+.dropmenu {
+font-family: Arial, Veranda, Times;font-size: 10pt;font-weight: bold;
+list-style-type: none; margin:0;padding:0;border:0;background-color:#527BAD
+}
+
+.dropmenu ul{
+visibility:hidden;position:absolute;width:108px;display: block;margin: 0;padding: 0;  line-height: 15px; background-color:#527BAD
+}
+
+
+.dropmenu li{
+float: none;  display: block !important; display: inline; text-decoration: none;font-weight:bold;font-size:10pt;  top: 0px; background-color:#527BAD
+}
+
+.dropmenu li:hover {
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;
+}
+
+.dropmenu ul li div{
+visibility:hidden; position:absolute; width:108px; left: 108px; top: 0px; margin: 0;padding: 0;  display: inline; list-style: none; background-color:#325B9D
+}
+
+.dropmenu ul li div a{
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#325B9D
+}
+
+.dropmenu ul li div a:hover {
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#8db3ff
+}
+
+.dropmenu ul li a{
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#527BAD
+}
+
+.dropmenu ul li a:hover {
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#8db3ff
+}
+
+
+
+
+.dropmenu a{
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#527BAD
+}
+
+.dropmenu a:hover {
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#8db3ff
+}
+
+
+-->
+</style>
+<!-- end theme CSS -->
+</head>
+<body topmargin="0" leftmargin="0" vlink="#000080" bgcolor="#E9F3FE" link="#000080" text="#000080">
+<form method=get action="http://www.google.com/search">
+<table border="0" cellpadding="1" width="100%" bgcolor="#CCCCCC">
+  <tr> 
+    <td width="99%" bgcolor="#527BAD" colspan="10"> 
+      <table border="0" cellpadding="1" cellspacing="0" width="100%" bgcolor="#000080">
+        <tr> 
+          <td height="88" valign="top" bgcolor="#527BAD" rowspan="3" width="50%"> 
+            <img border="0" src="http://www.HelloDBA.com/Images/left_title.jpg" width="100%" height="88" alt="HelloDBA"></td>
+          <td width="18%" height="23" valign="top" bgcolor="#527BAD" colspan="2" align="right"> 
+            [<a href=http://www.HelloDBA.com/index.php?lang=en>English</a>]</td>
+        </tr>
+        <tr> 
+          <td width="13%" height="35" valign="top" bgcolor="#527BAD"> 
+					<input type=text name=q size=31 maxlength=255 value=""></td>
+          <td width="5%" height="35" valign="top" bgcolor="#527BAD"> 
+					<input type=submit name=btnG value="搜索"></td>
+        </tr>
+        <tr> 
+          <td width="18%" height="25" valign="top" bgcolor="#527BAD" colspan="2"> 
+					<font size=-1>
+					<input type=radio name=sitesearch value=""> 搜索Internet
+					<input type=radio name=sitesearch value="www.HelloDBA.com" checked> 搜索 HelloDBABA
+					</font>
+          </td>
+        </tr>
+  <!--tr>
+    <img src="Images/top3.gif"> 
+  <tr--> 
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="99%" bgcolor="#527BAD" colspan="10">
+      <table border="0" cellpadding="1" cellspacing="0" width="100%" bgcolor="#000080">
+        <tr>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+        		<font color="#FCCD10"></font></a>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD" class="dropmenu"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('HomePage').style.visibility='visible'" onMouseOut="document.getElementById('HomePage').style.visibility='hidden'" bgcolor="#527BAD">
+					<a href="http://www.HelloDBA.com/index.php?lang=cn"><font color="#FCCD10">首页</font></a><br>
+					<ul id="HomePage" bgcolor="#527BAD">
+						<li><a href="http://www.HelloDBA.com/index.php?lang=en"><font color="#FCCD10">English</font></a></li>
+						<li><a href="http://www.HelloDBA.com/index.php?lang=cn"><font color="#FCCD10">中文</font></a></li>
+					</ul>
+				</div>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('TechDoc').style.visibility='visible'" onMouseOut="document.getElementById('TechDoc').style.visibility='hidden'" bgcolor="#527BAD">
+					<a href="http://www.HelloDBA.com/index.php?class=doc&lang=cn"><font color="#FCCD10">技术文档</font></a><br>
+					<ul id="TechDoc" bgcolor="#527BAD">
+						<li><a href="http://www.HelloDBA.com/index.php?class=doc&lang=cn"><font color="#FCCD10">文章</font></a></li>
+						<li><a href="http://www.HelloDBA.com/index.php?class=cases&lang=cn"><font color="#FCCD10">案例</font></a></li>
+					</ul>
+				</div>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('ProdDown').style.visibility='visible'" onMouseOut="document.getElementById('ProdDown').style.visibility='hidden'" bgcolor="#527BAD">
+					<a href="http://www.HelloDBA.com/index.php?class=prods&lang=cn"><font color="#FCCD10">产品及下载</font></a><br>
+					<ul id="ProdDown" bgcolor="#527BAD">
+						<li onMouseOver="document.getElementById('ProdsMenu').style.visibility='visible'" onMouseOut="document.getElementById('ProdsMenu').style.visibility='hidden'">
+							<a href="http://www.HelloDBA.com/index.php?class=prods&lang=cn"><font color="#FCCD10">产品 >> </font></a><br>
+							<div id="ProdsMenu" bgcolor="#527BAD">
+								<a href="http://www.HelloDBA.com/reader.php?ID=180&lang=cn"><font color="#FCCD10">FyDB</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=122&lang=cn"><font color="#FCCD10">OraTracer</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=119&lang=cn"><font color="#FCCD10">FySafe</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=121&lang=cn"><font color="#FCCD10">FyUnWrap</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=120&lang=cn"><font color="#FCCD10">SQLStress</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=191&lang=cn"><font color="#FCCD10">Fy_Recover_Data</font></a><br>
+							</div>
+						</li>
+						<li><a href="http://www.HelloDBA.com/index.php?class=sharing&lang=cn"><font color="#FCCD10">分享</font></a></li>
+					</ul>
+				</div>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('subscribe').style.visibility='visible'" onMouseOut="document.getElementById('subscribe').style.visibility='hidden'">
+					<a href="http://www.HelloDBA.com/rss.xml"><font color="#FCCD10">订阅</font></a><br>
+					<ul id="subscribe">
+						<li><a target="_blank" href="http://www.google.com/ig/add?feedurl=http://www.HelloDBA.com/rss.xml"><img title="至 Google" src="http://www.HelloDBA.com/images/icon_google.gif" alt="至 Google" /></a></li>
+						<li><a target="_blank" href="http://add.my.yahoo.com/rss?url=http://www.HelloDBA.com/rss.xml"><img title="至 Yahoo" src="http://www.HelloDBA.com/images/icon_yahoo.gif" alt="至 Yahoo" /></a></li>
+						<li><a target="_blank" href="http://www.zhuaxia.com/add_channel.php?url=http://www.HelloDBA.com/rss.xml"><img title="至 Zhuxia" src="http://www.HelloDBA.com/images/icon_zhuaxia.gif" alt="至 zhuxia" /></a></li>
+						<li><a target="_blank" href="http://www.xianguo.com/subscribe.php?url=http://www.HelloDBA.com/rss.xml"><img title="至 Xianguo" src="http://www.HelloDBA.com/images/icon_xianguo.gif" alt="至 xianguo" /></a></li>
+						<li><a target="_blank" href="http://mail.qq.com/cgi-bin/feed?u=http://www.HelloDBA.com/rss.xml"><img title="至 QQ eMail" src="http://www.HelloDBA.com/images/icon_qq.gif" alt="至 QQ email" /></a></li>
+						<li><a target="_blank" href="http://reader.yodao.com/b.do?url=http://www.HelloDBA.com/rss.xml"><img title="至 Youdao" src="http://www.HelloDBA.com/images/icon_youdao.gif" alt="至 YouDao" /></a></li>
+					</ul>
+				</div>
+        	  </td>
+            <td width="9%" align="left" bgcolor="#527BAD" class="dropmenu"> 
+              <a href="http://www.addthis.com/bookmark.php?v=12&amp;winname=addthis&amp;pub=HelloDBAcom&amp;s=&amp;url=http%3A%2F%2Fwww.HelloDBA.com%2Ftitle=HelloDBA.Com" onMouseOver="return addthis_open(this, '', '', '跳跃式索引(Skip Scan Index)的浅析')" onMouseOut="addthis_close()" onClick="return addthis_sendto(this, '', '', '跳跃式索引(Skip Scan Index)的浅析')" style="text-decoration: none;font-weight:bold;font-size:10pt;"><font color="#FCCD10">收藏</font></a>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('About').style.visibility='visible'" onMouseOut="document.getElementById('About').style.visibility='hidden'" bgcolor="#527BAD">
+					<a href="http://www.HelloDBA.com/reader.php?ID=118&lang=cn"><font color="#FCCD10">关于</font></a><br>
+					<ul id="About" bgcolor="#527BAD">
+						<li><a href="http://www.HelloDBA.com/reader.php?ID=118&lang=cn"><font color="#FCCD10">本人</font></a></li>
+						<li><a href="http://www.HelloDBA.com/reader.php?ID=117&lang=cn"><font color="#FCCD10">申明</font></a></li>
+					</ul>
+				</div>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+        		<font color="#FCCD10"></font></a>
+            </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr bgcolor="#D0E6FD"> 
+    <td width="99%" colspan="10" align=center> 
+		  <font size="2" face="宋体">&nbsp;&nbsp;Oracle技术站。email:
+		<a href="mailto:fuyuncat@gmail.com">fuyuncat@gmail.com</a>&nbsp; MSN: fuyuncat@hotmail.com</font>
+ 		<iframe height="24" frameborder="0" width="220" scrolling="no" src="http://widget.weibo.com/relationship/followbutton.php?language=zh_cn&amp;width=100%&amp;height=24&amp;uid=1407854870&amp;style=1&amp;btn=red&amp;dpc=1" border="0" marginheight="0" marginwidth="0" allowtransparency="true" style="margin-left: 20px;margin-top:0px"></iframe>&nbsp; 
+        <a href="http://www.acoug.org" target=_blank><font color="#CCCCCC">
+			<img border="0" src="http://www.HelloDBA.com/Images/acoug.png" width="110" height="30" alt="acoug"></font></a>&nbsp; 
+        <a href="https://apex.oracle.com/pls/apex/f?p=19297:4:110789587846680::NO:4:P4_ID:7120" target=_blank><font color="#CCCCCC">
+			<img border="0" src="http://www.HelloDBA.com/Images/O_ACELogo_clr.gif" height="30" alt="acoug"></font></a>&nbsp; 
+
+	</td>
+  </tr>
+</table>
+</form>
+
+<!-- <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script> -->
+<div class=Section1 style='layout-grid:15.6pt'>
+
+<h1 id="Title" align=center style='text-align:center'><span lang=EN-US style='color:blue'>跳跃式索引(Skip Scan Index)的浅析</span><g:plusone></g:plusone></h1>
+<p align="center">
+[<a id="ArticleAddr" href="http://www.HelloDBA.com/reader.php?ID=166&lang=EN">English</a>]
+</p>
+<p class=MsoNormal align=center style='text-align:center'><b style='mso-bidi-font-weight:
+normal'><span style='font-size:10.0pt;font-family:宋体;mso-ascii-font-family:
+"Times New Roman";mso-hansi-font-family:"Times New Roman";color:red'>作者：</span></b>
+<a id="Author" style="TEXT-DECORATION: none" href="http://www.HelloDBA.com" target=_blank><b style='mso-bidi-font-weight:normal'><span lang=EN-US style='font-size:10.0pt;color:red'>fuyuncat<o:p></o:p></span></b></a>
+</p>
+
+<p class=MsoNormal align=center style='text-align:center'><b style='mso-bidi-font-weight:
+normal'><span style='font-size:10.0pt;font-family:宋体;mso-ascii-font-family:
+"Times New Roman";mso-hansi-font-family:"Times New Roman";color:red'>来源：</span></b>
+<a id="FromSite" style="TEXT-DECORATION: none" href="http://www.HelloDBA.com" target=_blank><b style='mso-bidi-font-weight:normal'><span lang=EN-US style='font-size:10.0pt;color:red'><font color="#FF0000">www.HelloDBA.com</font><o:p></o:p></span></b></a>
+</p>
+
+<p class=MsoNormal align=center style='text-align:center'><b style='mso-bidi-font-weight:
+normal'><span style='font-size:10.0pt;font-family:宋体;mso-ascii-font-family:
+"Times New Roman";mso-hansi-font-family:"Times New Roman";color:red'>日期：</span></b>
+<a id="FromSite" style="TEXT-DECORATION: none" href="http://www.HelloDBA.com/" target=_blank><b style='mso-bidi-font-weight:normal'><span lang=EN-US style='font-size:10.0pt;color:red'><font color="#FF0000">2006-01-07 14:50:13</font><o:p></o:p></span></b></a>
+</p>
+
+<p class=MsoNormal align=center style='text-align:center'>
+分享到&nbsp;
+<script type="text/javascript">
+function trim(str){
+    return str.replace(/(^\s*)|(\s*$)/g, "");  
+}
+
+function shareToQQ(){
+	var _t = "跳跃式索引(Skip Scan Index)的浅析";
+	if (trim(_t) == ""){
+		_t=encodeURIComponent(document.title);
+	}else{
+		_t=encodeURIComponent(_t);
+	}
+	var _url = encodeURIComponent(document.location);
+	var _pic = encodeURI('');
+	var _site = 'http://www.HelloDBA.net';
+	var _u = 'http://v.t.qq.com/share/share.php?url='+_url+'&site='+_site+'&pic='+_pic+'&title='+_t;
+	window.open( _u,'', 'width=700, height=680, top=0, left=0, toolbar=no, menubar=no, scrollbars=no, location=yes, resizable=no, status=no' );
+}
+
+function shareTo(s,uu,tt,n,ec){
+	t="跳跃式索引(Skip Scan Index)的浅析";
+	ec = (typeof(ec)== "undefined")?1:ec; 
+	u = ec==1?encodeURIComponent(location.href):location.href;
+	if (trim(t) == ""){
+		t=encodeURIComponent(document.title);
+	}else{
+		t=encodeURIComponent(t);
+	}
+	window.open(s+uu+u+tt+t,'ShareTo'+n,'toolbar=0,status=0,width=626,height=436');
+}
+</script>
+
+<a title="新浪微博" href="javascript:(function(){window.open('http://v.t.sina.com.cn/share/share.php?&url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent('跳跃式索引(Skip Scan Index)的浅析'),'_blank','width=450,height=400');})()"><img alt="新浪微博" src="images/sina.png" border=0 width=16 height=16></a>
+<a title="腾讯微博" href='javascript:void(0)' onclick='shareToQQ();' class='tmblog'><img src='images/qq.png' alt="腾讯微博" border=0 width=16 height=16></a>
+<a href="javascript:window.open('http://share.renren.com/share/buttonshare.do?title='+encodeURIComponent('跳跃式索引(Skip Scan Index)的浅析'.substring(0,76))+'&link='+encodeURIComponent(location.href)+'&content=','_blank','scrollbars=no,width=600,height=450,left=75,top=20,status=no,resizable=yes'); void 0" style="color:#000000;text-decoration:none;font-size:12px;font-weight:normal" title="人人网"><IMG alt="人人网" src="images/renren.ico" border=0 width=16 height=16></a>
+<a title="i贴吧" href="javascript:void(function(){var itieba_share = 'http://tieba.baidu.com/i/sys/share?link=' + encodeURIComponent(location.href)+'&title=' + encodeURIComponent('跳跃式索引(Skip Scan Index)的浅析')+'&content=' + encodeURIComponent('');if (!window.open(itieba_share, 'itieba', 'toolbar=0,resizable=1,scrollbars=yes,status=1,width=626,height=436'))  {location.href = itieba_share;}})();"><img src="images/baidu.ico" alt="i贴吧" border=0 width=16 height=16></a>
+<a href="javascript:d=document;t=d.selection?(d.selection.type!='None'?d.selection.createRange().text:''):(d.getSelection?d.getSelection():'');void(kaixin=window.open('http://www.kaixin001.com/~repaste/repaste.php?&amp;rurl='+escape(d.location.href)+'&amp;rtitle='+escape('跳跃式索引(Skip Scan Index)的浅析')+'&amp;rcontent='+escape(d.location.href),'kaixin'));kaixin.focus();" title="开心网"><img src="images/kaixin.ico" alt="开心网" border=0 width=16 height=16></a>
+<a title="豆瓣" href="javascript:var u='http://www.douban.com/recommend/?url='+location.href+'&amp;title='+encodeURIComponent('跳跃式索引(Skip Scan Index)的浅析');window.open(u,'douban','toolbar=0,resizable=1,scrollbars=yes,status=1,width=450,height=330');void(0)"><img src="images/douban.ico" alt="豆瓣" border=0 width=16 height=16></a>
+<a href="javascript:d=document;t=d.selection?(d.selection.type!='None'?d.selection.createRange().text:''):(d.getSelection?d.getSelection():'');void(kaixin=window.open('http://share.jianghu.taobao.com/share/addShare.htm?url='+escape(d.location.href)+'&tracelog=hellodba.com'));" title="淘宝"><img src="images/taobao.ico" alt="淘宝" border=0 width=16 height=16></a>
+<a href="javascript: void(window.open('http://twitter.com/home/?status='.concat(encodeURIComponent('跳跃式索引(Skip Scan Index)的浅析')) .concat(' ') .concat(encodeURIComponent(location.href))));" title="推特"><img src="images/twitter.ico" alt="推特" border=0 width=16 height=16></a>
+<a href="javascript:shareTo('http://www.facebook.com/sharer.php?','u=','&t=','Facebook',1)" title="Facebook"><img src="images/facebook.png" alt="Facebook" border=0 width=16 height=16/></a>
+<a href="javascript:shareTo('https://mail.google.com/mail/?ui=2&view=cm&fs=1&tf=1','&body=','&su=','gmail',1)" title="GMail"><img src="images/gmail.gif" alt="GMail" border=0 width=16 height=16/></a>
+<a href="javascript:shareTo('http://www.blogger.com/blog_this.pyra?','u=','&n=','Blogger',1)" title="Blogger"><img src="images/blogger.png" alt="Blogger" border=0 width=16 height=16/></a>
+<!-- <a href="javascript:shareTo('http://www.google.com/buzz/post?','url=','&title=','Buzz',1)" title="Buzz"><img src="images/buzz.gif" alt="Buzz" border=0 width=16 height=16/></a> -->
+<a href="javascript:shareTo('http://promote.orkut.com/preview?nt=orkut.com','&du=','&tt=','Orkut',1)" title="Orkut"><img src="images/orkut.png" alt="Orkut" border=0 width=16 height=16/></a>
+<!-- <a href="javascript:shareTo('http://www.google.com/reader/link?','url=','&title=','Reader',1)" title="Google Reader"><img src="images/reader.png" alt="Google Reader" border=0 width=16 height=16/></a> -->
+<a href="javascript:shareTo('https://www.google.com/bookmarks/mark?op=edit','&bkmk=','&title=','Bookmarks',1)" title="Google Bookmarks"><img src="images/bookmarks.gif" alt="Google Bookmarks" border=0 width=16 height=16/></a>
+</p>
+<blockquote>
+	<blockquote>
+		<table cellPadding="0" width="88%" border="0" id="table5">
+			<tr>
+				<td id="ArticleContent" width="88%">
+
+<p class=MsoNormal><span lang=EN-US style='font-size:12.0pt'><o:p>&nbsp;</o:p></span><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">在</span><span lang="EN-US">Oracle9i</span><span style="font-family: 宋体">中，有一个新的特性：跳跃式索引</span><span lang="EN-US">(Skip 
+Scan Index)</span><span style="font-family: 宋体">。当表有一个复合索引，而在查询中有除了索引中第一列的其他列作为条件，并且优化器模式为</span><span lang="EN-US">CBO</span><span style="font-family: 宋体">，这时候查询计划就有可能使用到</span><span lang="EN-US">SS</span><span style="font-family: 宋体">。此外，还可以通过使用提示</span><span lang="EN-US">index_ss</span><span style="font-family: 宋体">（</span><span lang="EN-US">CBO</span><span style="font-family: 宋体">下）来强制使用</span><span lang="EN-US">SS</span><span style="font-family: 宋体">。</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+举例：</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; create table test1 (a number, b char(10), c varchar2(10));</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Table created.</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; create index test_idx1 on test1(a, b);</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Index created.</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; set autotrace on</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; select /*+index_ss(test1 test_idx1)*/* from test1 a</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+2 <span style="color:#993300">where b =&#39;a&#39;</span>;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+no rows selected</span></p>
+
+	<p class="MsoNormal" style="text-indent: 36.0pt; border: medium none; padding: 0cm">
+	<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+	Execution Plan</span>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+0 SELECT STATEMENT Optimizer=CHOOSE (Cost=2 Card=1 Bytes=32)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+1 0 TABLE ACCESS (BY INDEX ROWID) OF &#39;TEST1&#39; (Cost=2 Card=1 Bytes=32)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+2 1 <span style="color:blue">INDEX (SKIP SCAN)</span> OF &#39;TEST_IDX1&#39; 
+(NON-UNIQUE)<br>
+</span><span lang="EN-US" style="font-family:Verdana"><br>
+&nbsp;&nbsp;&nbsp;&nbsp; </span><span style="font-family: 宋体">但并不是任何情况下都会使用到</span><span lang="EN-US" style="font-family:Verdana">SS</span><span style="font-family: 宋体">。在</span><span lang="EN-US" style="font-family:Verdana">Oracle</span><span style="font-family: 宋体">的官方文档中，除了提到需要</span><span lang="EN-US" style="font-family:Verdana">CBO</span><span style="font-family: 宋体">，并且对表进行过分析外，还需要保证第一列的</span><span lang="EN-US" style="font-family:Verdana">distinct 
+value</span><span style="font-family: 宋体">非常小。这一段是从官方文档上摘取的关于</span><span lang="EN-US" style="font-family:Verdana">SS</span><span style="font-family: 宋体">的一段解释：</span></p>
+<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 36.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt">&nbsp;</pre>
+<p style="text-indent:36.0pt" class="MsoNormal">
+<span style="font-family:Verdana; font-style:italic">Index skip scans improve index scans by nonprefix columns since it is often faster to scan index blocks than scanning table data blocks.</span></p>
+<p style="text-indent:36.0pt" class="MsoNormal">
+<span style="font-family:Verdana; font-style:italic">&nbsp;</span></p>
+<p style="text-indent:36.0pt" class="MsoNormal">
+<span style="font-family:Verdana; font-style:italic">In this case a composite index is split logically into smaller subindexes. The number of logical subindexes depends on the cardinality of the initial column. Hence it is now possible to use the index even if the leading column is not used in a where clause.</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span style="font-family:Verdana">&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-family:Verdana">Oracle</span><span style="font-family: 宋体">并没有公布过关于</span><span lang="EN-US" style="font-family:Verdana">SS</span><span style="font-family: 宋体">更多的内部技术细节。但注意上面的这句话：</span><i><span lang="EN-US" style="font-family:Courier">In 
+this case a composite index is split logically into smaller subindexes. The 
+number of logical subindexes depends on the cardinality of the initial column.</span></i><span style="font-family: 宋体">即</span><span lang="EN-US" style="font-family:Verdana">Oralce</span><span style="font-family: 宋体">会对复合索引进行逻辑划分，分成多个子索引。可以这样理解，</span><span lang="EN-US" style="font-family:Verdana">Oracle</span><span style="font-family: 宋体">将索引从逻辑上划分为</span><span lang="EN-US" style="font-family:Verdana">a.num_distinct</span><span style="font-family: 宋体">个子索引，每次对一个子索引进行扫描。因此</span><span lang="EN-US" style="font-family:Verdana">SS</span><span style="font-family: 宋体">的索引扫描成本为</span><span lang="EN-US" style="font-family:Verdana">a.num_distinct.</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+下面做一些试验</span><span lang="EN-US" style="font-family:Verdana">,</span><span style="font-family: 宋体">看看在什么情况下</span><span lang="EN-US" style="font-family:Verdana">Oracle</span><span style="font-family: 宋体">采用</span><span lang="EN-US" style="font-family:Verdana">SS.</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+首先要保证使用</span><span lang="EN-US" style="font-family:Verdana">SS</span><span style="font-family: 宋体">的几个必要条件</span><span lang="EN-US" style="font-family:Verdana">:</span></p>
+<p class="MsoNormal" style="text-indent: -18.0pt; margin-left: 54.0pt">
+<span lang="EN-US" style="font-family: Symbol">·<span style="font:7.0pt &quot;Times New Roman&quot;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span lang="EN-US" style="font-family:Verdana">Optimizer</span><span style="font-family: 宋体">为</span><span lang="EN-US" style="font-family:Verdana">CBO</span></p>
+<p class="MsoNormal" style="text-indent: -18.0pt; margin-left: 54.0pt">
+<span lang="EN-US" style="font-family: Symbol">·<span style="font:7.0pt &quot;Times New Roman&quot;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style="font-family: 宋体">相关表要有正确的统计数据</span></p>
+<p class="MsoNormal" style="text-indent: -18.0pt; margin-left: 54.0pt">
+<span lang="EN-US" style="font-family: Symbol">·<span style="font:7.0pt &quot;Times New Roman&quot;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span lang="EN-US" style="font-family:Verdana">Oracle DB</span><span style="font-family: 宋体">版本为</span><span lang="EN-US" style="font-family:Verdana">9i</span><span style="font-family: 宋体">以上</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+下面就是一个使用到</span><span lang="EN-US" style="font-family:Verdana">SS</span><span style="font-family: 宋体">的特殊条件：第一列的</span><span lang="EN-US" style="font-family:Verdana">distinct 
+num</span><span style="font-family: 宋体">要足够小。小到什么程度呢？</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+还是以上面的表为例（省略中间的麻烦步骤，取两个临界值做实验）：</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+取第一列</span><span lang="EN-US" style="font-family:Verdana">distinct number</span><span style="font-family: 宋体">为</span><span lang="EN-US" style="font-family:Verdana">37</span><span style="font-family: 宋体">：</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; truncate table test1;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Table truncated.</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; begin</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">&nbsp; 2&nbsp; for i in 1..100000 loop</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 3&nbsp; insert into test1 values (mod(i,37), to_char(i), to_char(i));</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 4&nbsp; end loop;p;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 5&nbsp; commit;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 6&nbsp; end;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 7&nbsp; /</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+PL/SQL procedure successfully completed.</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; analyze table test1 compute statistics;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Table analyzed.</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; set autotrace on explain</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; select * from test1</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 2&nbsp; where b = &#39;500&#39;;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A B&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; C</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+---------- ---------- ----------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 19 500&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 500</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Execution Plan</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------------------------------------------------------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SELECT STATEMENT Optimizer=CHOOSE (Cost=37 Card=1 Bytes=17)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; <span style="color:red">TABLE ACCESS (FULL)</span> OF &#39;TEST1&#39; (<b>Cost=37</b> 
+Card=1 Bytes=17)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-family:Verdana">&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+再取第一列</span><span lang="EN-US" style="font-family:Verdana">distinct number</span><span style="font-family: 宋体">为</span><span lang="EN-US" style="font-family:Verdana">36</span><span style="font-family: 宋体">：</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; truncate table test1;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Table truncated.</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; begin</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 2&nbsp; for i in 1..100000 loop</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 3&nbsp; insert into test1 values (mod(i,36), to_char(i), to_char(i));</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 4&nbsp; end loop;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 5&nbsp; commit;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 6&nbsp; end;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 7&nbsp; /</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+PL/SQL procedure successfully completed.</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; analyze table test1 compute statistics;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Table analyzed.</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; select * from test1 where b = &#39;500&#39;;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A B&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; C</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+---------- ---------- ----------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 32 500&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 500</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Execution Plan</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------------------------------------------------------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SELECT STATEMENT Optimizer=CHOOSE (Cost=12 Card=1 Bytes=17)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; TABLE ACCESS (BY INDEX ROWID) OF &#39;TEST1&#39; (Cost=12 Card=1 B</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ytes=17)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 2&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; <span style="color:blue">INDEX (SKIP SCAN) </span>OF &#39;TEST_IDX1&#39; 
+(NON-UNIQUE) (<b>Cost=37</b> C</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ard=1)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-family:Verdana">&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+从上面试验结果看，</span><span lang="EN-US" style="font-family:Verdana">FTS</span><span style="font-family: 宋体">的</span><span lang="EN-US" style="font-family:Verdana">cost</span><span style="font-family: 宋体">是</span><span lang="EN-US" style="font-family:Verdana">37</span><span style="font-family: 宋体">。当第一列</span><span lang="EN-US" style="font-family:Verdana">distinct 
+number</span><span style="font-family: 宋体">小于这个值时，</span><span lang="EN-US" style="font-family:Verdana">Oracle</span><span style="font-family: 宋体">选择了</span><span lang="EN-US" style="font-family:Verdana">SS</span><span style="font-family: 宋体">。</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-family:Verdana">&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+继续试验：</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; select count(*) from test1</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;2&nbsp; <span style="color:#993300">where b &lt;= &#39;1&#39;</span>;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; COUNT(*)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Execution Plan</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------------------------------------------------------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SELECT STATEMENT Optimizer=CHOOSE (Cost=12 Card=1 Bytes=10)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; SORT (AGGREGATE)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 2&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; <span style="color:blue">INDEX (SKIP SCAN) </span>OF &#39;TEST_IDX1&#39; 
+(NON-UNIQUE) (Cost=37 <b>C</b></span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><b>
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ard=1</span></b><span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver"> 
+Bytes=10)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-family:Verdana">&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+注意：在</span><span lang="EN-US" style="font-family:Verdana">b</span><span style="font-family: 宋体">中</span><span lang="EN-US" style="font-family:Verdana">’10’</span><span style="font-family: 宋体">是比</span><span lang="EN-US" style="font-family:Verdana">’1’</span><span style="font-family: 宋体">大的最小值（</span><span lang="EN-US" style="font-family:Verdana">char(10)</span><span style="font-family: 宋体">类型）</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; select count(*) from test1</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 2&nbsp; <span style="color:#993300">where b &lt;= &#39;10&#39;</span>;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; COUNT(*)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Execution Plan</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------------------------------------------------------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SELECT STATEMENT Optimizer=CHOOSE (Cost=37 Card=1 Bytes=10)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; SORT (AGGREGATE)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 2&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; <span style="color:red">TABLE ACCESS (FULL)</span> OF &#39;TEST1&#39; 
+(Cost=37 <b>Card=773</b> Bytes=7</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 730)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+观察结果，这时候影响的因素是</span><span lang="EN-US" style="font-family:Verdana">cardinality</span><span style="font-family: 宋体">了。第二个查询计划中的</span><span lang="EN-US" style="font-family:Verdana">cardinality</span><span style="font-family: 宋体">值（</span><span lang="EN-US" style="font-family:Verdana">773</span><span style="font-family: 宋体">）正是</span><span lang="EN-US" style="font-family:Verdana">b&lt;=’10’</span><span style="font-family: 宋体">的</span><span lang="EN-US" style="font-family:Verdana">cardinality</span><span style="font-family: 宋体">值：</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; set autotrace off</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; select 100000*(to_number(&#39;31302020202020202020&#39;, &#39;xxxxxxxxxxxxxxxxxxxx&#39;)-to</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+_number(&#39;31202020202020202020&#39;, &#39;xxxxxxxxxxxxxxxxxxxx&#39;))/(to_number(&#39;39393939392</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+020202020&#39;, &#39;xxxxxxxxxxxxxxxxxxxx&#39;)-to_number(&#39;31202020202020202020&#39;, &#39;xxxxxxxxx</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+xxxxxxxxxxx&#39;))+1 from dual;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+100000*(TO_NUMBER(&#39;31302020202020202020&#39;,&#39;XXXXXXXXXXXXXXXXXXXX&#39;)-TO_NUMBER(&#39;3120</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+--------------------------------------------------------------------------------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 772.791768</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-family:Verdana">&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+再看一个含有第一列条件的等效的语句：</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; set autotrace on explain</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; select count(*) from test1</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 2&nbsp; where a&gt;=0</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 3&nbsp; and b &lt;=&#39;1&#39;;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; COUNT(*)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Execution Plan</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------------------------------------------------------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SELECT STATEMENT Optimizer=CHOOSE (Cost=12 Card=1 Bytes=12)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; SORT (AGGREGATE)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 2&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; <span style="color:blue">INDEX (SKIP SCAN)</span> OF &#39;TEST_IDX1&#39; 
+(NON-UNIQUE) (Cost=37 C</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ard=1 Bytes=12)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-family:Verdana">&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+再做几个有趣的试验，下面的试验条件是不满足</span><span lang="EN-US">SS</span><span style="font-family: 宋体">的，但是请注意查询返回列队查询计划的影响：</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; truncate table test1;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Table truncated.</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; begin</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 2&nbsp; for i in 1..100000 loop</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 3&nbsp; insert into test1 values (i, to_char(i), to_char(i));</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 4&nbsp; end loop;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 5&nbsp; commit;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 6&nbsp; end;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 7&nbsp; /</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+PL/SQL procedure successfully completed.</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; analyze table test1 compute statistics;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Table analyzed.</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; <span style="color:#993300">select * from</span> test1</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 2 &nbsp;where b = &#39;500&#39;;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A B&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; C</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+---------- ---------- ----------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 500 500&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 500</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Execution Plan</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------------------------------------------------------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SELECT STATEMENT Optimizer=CHOOSE (Cost=37 Card=1 Bytes=19)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; <span style="color:red">TABLE ACCESS (FULL)</span> OF &#39;TEST1&#39; 
+(Cost=37 Card=1 Bytes=19)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+改变返回列：</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; select <span style="color:maroon">count(*)</span> from test1</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 2&nbsp; where b = &#39;500&#39;;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; COUNT(*)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Execution Plan</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------------------------------------------------------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SELECT STATEMENT Optimizer=CHOOSE (Cost=34 Card=1 Bytes=10)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; SORT (AGGREGATE)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 2&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; <span style="color:green">INDEX (FAST FULL SCAN) </span>OF 
+&#39;TEST_IDX1&#39; (NON-UNIQUE) (Cost</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =34 Card=1 Bytes=10)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-family:Verdana">&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+再改变一种：</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; select a from test1</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 2&nbsp; where b = &#39;500&#39;;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 500</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Execution Plan</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------------------------------------------------------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SELECT STATEMENT Optimizer=CHOOSE (Cost=34 Card=1 Bytes=14)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; <span style="color:green">INDEX (FAST FULL SCAN)</span> OF 
+&#39;TEST_IDX1&#39; (NON-UNIQUE) (Cost=3</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4 Card=1 Bytes=14)</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-family:Verdana">&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">使用</span><span lang="EN-US" style="font-family:Verdana">RBO</span><span style="font-family: 宋体">呢？</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+SQL&gt; select /*+rule*/a from test1</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp; 2&nbsp; where b = &#39;500&#39;;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 500</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+Execution Plan</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+----------------------------------------------------------</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SELECT STATEMENT Optimizer=HINT: RULE</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-size: 10.0pt; font-family: Shruti; background: silver">
+&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; <span style="color:red">TABLE ACCESS (FULL)</span> OF &#39;TEST1&#39;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt">
+<span lang="EN-US" style="font-family:Verdana">&nbsp;</span></p>
+<p class="MsoNormal" style="text-indent:36.0pt"><span style="font-family: 宋体">
+值得一提的是，上述任何一个例子在</span><span lang="EN-US" style="font-family:Verdana">8i</span><span style="font-family: 宋体">中执行的话，都不会使用到索引（无论是否符合</span><span lang="EN-US" style="font-family:Verdana">SS</span><span style="font-family: 宋体">的条件）。</span></p>
+<p class="MsoNormal"><span lang="EN-US">&nbsp;</span></div>
+
+				</td>
+			</tr>
+		</table>
+	</blockquote>
+</blockquote>
+
+<div class="Section1" style="LAYOUT-GRID:  15.6pt none">
+	<table id="table6" cellPadding="0" width="100%" border="0">
+		<tr>
+			<td align="middle" width="50%">
+			上一篇：<a id="PrevArticle" align=center style='text-align:center'  href="http://www.HelloDBA.com/reader.php?ID=167&lang=CN">配置hacmp5.2 的Rotating方式</a></td>
+			<td align="middle" width="50%">
+			下一篇：<a id="NextArticle" align=center style='text-align:center'  href="http://www.HelloDBA.com/reader.php?ID=165&lang=CN">利用Oracle 10g SQL优化器（STA）优化语句(3)</a></td>
+		</tr>
+	</table>
+	<table id="table7" cellPadding="0" width="100%" border="0">
+		<tr>
+			<td align="middle" width="100%">
+			<a id="FullListThisClass" align=center style='text-align:center'  href="http://www.HelloDBA.com/index.php?class=DOC&lang=CN">本类中的所有文章</a></td>
+		</tr>
+	</table>
+</div>
+
+</div>
+
+<table border="0" cellpadding="0" width="100%" >
+  <tr> 
+    <td width="100%" colspan="2" align="center"> 
+      <p class="tnbb"> <b><font face="Arial"> <a style="text-decoration: none" href="#TOP"> 
+		<font color="#000080">Top</font></a><font color="#000080"> </font>
+		</font></b> </p>
+      <p class="tsb"><a style="text-decoration: none" href="http://www.HelloDBA.com/" target=_blank>
+		<font face="Arial" color="#000080" size="2">Copyright &copy;2005，HelloDBA.Com 保留一切权利
+		</font>
+        </a>
+      </p>
+      <p class="tnbb"><b><a style="TEXT-DECORATION: none" href="http://www.HelloDBA.com/reader.php?ID=117&lang=cn" target=_blank>
+		<font color="#000080">申明</font></a><font color="#000080"> </font></b>
+        <a style="TEXT-DECORATION: none" href="http://www.HelloDBA.com/SelfIntroduce.htm" target=_blank>
+		<span style="font-weight: 700" size = 1><font color="#000080"><br>
+		</font></span><span style="font-weight: 400" size = 1>
+		<font color="#000080" size="2" face="Arial">by fuyuncat</font></span></a><font size="2" color="#000080"><BR> 
+		</font> 
+	  </p>
+    </td>
+  </tr>
+</table>
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-1088511-1";
+urchinTracker();
+</script>
+</body>
+</html>

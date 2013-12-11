@@ -1,0 +1,724 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="Description" content="利用Oracle 10g SQL优化器（STA）优化语句">
+<meta name="Keywords" content="HelloDBA, DBA, Oracle, SQL Server, Database, DB, fuyuncat, 数据库, 调优, 备份, 方案, RAC, SQL Tuning, Performance Tuning, NON-SQL">
+<meta name="verify-v1" content="UlS54e6QG2YvdDUYce2K6e1LeDvv4Ff8CJ4WhHWynyw=" >
+<style type="text/css"><!--A:hover { color:red;} A:link { color:blue; }--></style>
+<title>利用Oracle 10g SQL优化器（STA）优化语句(1) [HelloDBA.COM]</title>
+<link rel="stylesheet" type="text/css" href="mspstyle.css">
+<script type="text/javascript" src="http://s7.addthis.com/js/152/addthis_widget.js"></script>
+<!-- AddThis Bookmark Button BEGIN -->
+<script type="text/javascript">
+  addthis_url    = location.href;   
+  addthis_title  = document.title;  
+  addthis_pub    = 'HelloDBA';     
+</script>
+<script type="text/javascript" src="http://s7.addthis.com/js/addthis_widget.php?v=12" ></script>
+<!-- AddThis Bookmark Button END -->
+<link rel="stylesheet" href="http://www.HelloDBA.com/insertcode.css">
+
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="chmetcnv"/>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="chsdate"/>
+<!-- begin theme CSS -->
+<style type="text/css">
+<!--
+.spBody {
+  color: #000000;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spFrameBody {
+  background-color: #e7e7e7;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spFrameBorder {
+  background-color: #000000;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spFrameTitle {
+  background-color: #527bad;
+  color: #FFFFFF;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+  font-weight: bold;
+}
+.spFrameTitleLink:link {
+  color: #FFFFFF;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spHead {
+  color: #000000;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spLink {
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spLink:active {
+  color: #e6e6e6;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spLink:link {
+  color: #527bad;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+.spLink:visited {
+  color: #999999;
+  font-family: Arial, Veranda, Times;
+  font-size: 10pt;
+}
+
+ /* Font Definitions */
+ @font-face
+	{font-family:宋体;
+	panose-1:2 1 6 0 3 1 1 1 1 1;
+	mso-font-alt:SimSun;
+	mso-font-charset:134;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+@font-face
+	{font-family:新宋体;
+	panose-1:2 1 6 9 3 1 1 1 1 1;
+	mso-font-charset:134;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+@font-face
+	{font-family:"\@宋体";
+	panose-1:2 1 6 0 3 1 1 1 1 1;
+	mso-font-charset:134;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+@font-face
+	{font-family:"\@新宋体";
+	panose-1:2 1 6 9 3 1 1 1 1 1;
+	mso-font-charset:134;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0cm;
+	margin-bottom:.0001pt;
+	text-align:justify;
+	text-justify:inter-ideograph;
+	mso-pagination:none;
+	font-size:10.5pt;
+	mso-bidi-font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:宋体;
+	mso-font-kerning:1.0pt;}
+h1
+	{mso-style-next:正文;
+	margin-top:17.0pt;
+	margin-right:0cm;
+	margin-bottom:16.5pt;
+	margin-left:0cm;
+	text-align:justify;
+	text-justify:inter-ideograph;
+	line-height:240%;
+	mso-pagination:lines-together;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:22.0pt;
+	font-family:"Times New Roman";
+	mso-font-kerning:22.0pt;}
+span.SpellE
+	{mso-style-name:"";
+	mso-spl-e:yes;}
+span.GramE
+	{mso-style-name:"";
+	mso-gram-e:yes;}
+ /* Page Definitions */
+ @page
+	{mso-page-border-surround-header:no;
+	mso-page-border-surround-footer:no;}
+@page Section1
+	{size:595.3pt 841.9pt;
+	margin:72.0pt 90.0pt 72.0pt 90.0pt;
+	mso-header-margin:42.55pt;
+	mso-footer-margin:49.6pt;
+	mso-paper-source:0;
+	layout-grid:15.6pt;}
+div.Section1
+	{page:Section1;}
+
+.dropmenu {
+font-family: Arial, Veranda, Times;font-size: 10pt;font-weight: bold;
+list-style-type: none; margin:0;padding:0;border:0;background-color:#527BAD
+}
+
+.dropmenu ul{
+visibility:hidden;position:absolute;width:108px;display: block;margin: 0;padding: 0;  line-height: 15px; background-color:#527BAD
+}
+
+
+.dropmenu li{
+float: none;  display: block !important; display: inline; text-decoration: none;font-weight:bold;font-size:10pt;  top: 0px; background-color:#527BAD
+}
+
+.dropmenu li:hover {
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;
+}
+
+.dropmenu ul li div{
+visibility:hidden; position:absolute; width:108px; left: 108px; top: 0px; margin: 0;padding: 0;  display: inline; list-style: none; background-color:#325B9D
+}
+
+.dropmenu ul li div a{
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#325B9D
+}
+
+.dropmenu ul li div a:hover {
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#8db3ff
+}
+
+.dropmenu ul li a{
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#527BAD
+}
+
+.dropmenu ul li a:hover {
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#8db3ff
+}
+
+
+
+
+.dropmenu a{
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#527BAD
+}
+
+.dropmenu a:hover {
+text-decoration: none;font-weight:bold;font-size:10pt; line-height: 15px;background-color:#8db3ff
+}
+
+
+-->
+</style>
+<!-- end theme CSS -->
+</head>
+<body topmargin="0" leftmargin="0" vlink="#000080" bgcolor="#E9F3FE" link="#000080" text="#000080">
+<form method=get action="http://www.google.com/search">
+<table border="0" cellpadding="1" width="100%" bgcolor="#CCCCCC">
+  <tr> 
+    <td width="99%" bgcolor="#527BAD" colspan="10"> 
+      <table border="0" cellpadding="1" cellspacing="0" width="100%" bgcolor="#000080">
+        <tr> 
+          <td height="88" valign="top" bgcolor="#527BAD" rowspan="3" width="50%"> 
+            <img border="0" src="http://www.HelloDBA.com/Images/left_title.jpg" width="100%" height="88" alt="HelloDBA"></td>
+          <td width="18%" height="23" valign="top" bgcolor="#527BAD" colspan="2" align="right"> 
+            [<a href=http://www.HelloDBA.com/index.php?lang=en>English</a>]</td>
+        </tr>
+        <tr> 
+          <td width="13%" height="35" valign="top" bgcolor="#527BAD"> 
+					<input type=text name=q size=31 maxlength=255 value=""></td>
+          <td width="5%" height="35" valign="top" bgcolor="#527BAD"> 
+					<input type=submit name=btnG value="搜索"></td>
+        </tr>
+        <tr> 
+          <td width="18%" height="25" valign="top" bgcolor="#527BAD" colspan="2"> 
+					<font size=-1>
+					<input type=radio name=sitesearch value=""> 搜索Internet
+					<input type=radio name=sitesearch value="www.HelloDBA.com" checked> 搜索 HelloDBABA
+					</font>
+          </td>
+        </tr>
+  <!--tr>
+    <img src="Images/top3.gif"> 
+  <tr--> 
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td width="99%" bgcolor="#527BAD" colspan="10">
+      <table border="0" cellpadding="1" cellspacing="0" width="100%" bgcolor="#000080">
+        <tr>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+        		<font color="#FCCD10"></font></a>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD" class="dropmenu"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('HomePage').style.visibility='visible'" onMouseOut="document.getElementById('HomePage').style.visibility='hidden'" bgcolor="#527BAD">
+					<a href="http://www.HelloDBA.com/index.php?lang=cn"><font color="#FCCD10">首页</font></a><br>
+					<ul id="HomePage" bgcolor="#527BAD">
+						<li><a href="http://www.HelloDBA.com/index.php?lang=en"><font color="#FCCD10">English</font></a></li>
+						<li><a href="http://www.HelloDBA.com/index.php?lang=cn"><font color="#FCCD10">中文</font></a></li>
+					</ul>
+				</div>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('TechDoc').style.visibility='visible'" onMouseOut="document.getElementById('TechDoc').style.visibility='hidden'" bgcolor="#527BAD">
+					<a href="http://www.HelloDBA.com/index.php?class=doc&lang=cn"><font color="#FCCD10">技术文档</font></a><br>
+					<ul id="TechDoc" bgcolor="#527BAD">
+						<li><a href="http://www.HelloDBA.com/index.php?class=doc&lang=cn"><font color="#FCCD10">文章</font></a></li>
+						<li><a href="http://www.HelloDBA.com/index.php?class=cases&lang=cn"><font color="#FCCD10">案例</font></a></li>
+					</ul>
+				</div>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('ProdDown').style.visibility='visible'" onMouseOut="document.getElementById('ProdDown').style.visibility='hidden'" bgcolor="#527BAD">
+					<a href="http://www.HelloDBA.com/index.php?class=prods&lang=cn"><font color="#FCCD10">产品及下载</font></a><br>
+					<ul id="ProdDown" bgcolor="#527BAD">
+						<li onMouseOver="document.getElementById('ProdsMenu').style.visibility='visible'" onMouseOut="document.getElementById('ProdsMenu').style.visibility='hidden'">
+							<a href="http://www.HelloDBA.com/index.php?class=prods&lang=cn"><font color="#FCCD10">产品 >> </font></a><br>
+							<div id="ProdsMenu" bgcolor="#527BAD">
+								<a href="http://www.HelloDBA.com/reader.php?ID=180&lang=cn"><font color="#FCCD10">FyDB</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=122&lang=cn"><font color="#FCCD10">OraTracer</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=119&lang=cn"><font color="#FCCD10">FySafe</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=121&lang=cn"><font color="#FCCD10">FyUnWrap</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=120&lang=cn"><font color="#FCCD10">SQLStress</font></a><br>
+								<a href="http://www.HelloDBA.com/reader.php?ID=191&lang=cn"><font color="#FCCD10">Fy_Recover_Data</font></a><br>
+							</div>
+						</li>
+						<li><a href="http://www.HelloDBA.com/index.php?class=sharing&lang=cn"><font color="#FCCD10">分享</font></a></li>
+					</ul>
+				</div>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('subscribe').style.visibility='visible'" onMouseOut="document.getElementById('subscribe').style.visibility='hidden'">
+					<a href="http://www.HelloDBA.com/rss.xml"><font color="#FCCD10">订阅</font></a><br>
+					<ul id="subscribe">
+						<li><a target="_blank" href="http://www.google.com/ig/add?feedurl=http://www.HelloDBA.com/rss.xml"><img title="至 Google" src="http://www.HelloDBA.com/images/icon_google.gif" alt="至 Google" /></a></li>
+						<li><a target="_blank" href="http://add.my.yahoo.com/rss?url=http://www.HelloDBA.com/rss.xml"><img title="至 Yahoo" src="http://www.HelloDBA.com/images/icon_yahoo.gif" alt="至 Yahoo" /></a></li>
+						<li><a target="_blank" href="http://www.zhuaxia.com/add_channel.php?url=http://www.HelloDBA.com/rss.xml"><img title="至 Zhuxia" src="http://www.HelloDBA.com/images/icon_zhuaxia.gif" alt="至 zhuxia" /></a></li>
+						<li><a target="_blank" href="http://www.xianguo.com/subscribe.php?url=http://www.HelloDBA.com/rss.xml"><img title="至 Xianguo" src="http://www.HelloDBA.com/images/icon_xianguo.gif" alt="至 xianguo" /></a></li>
+						<li><a target="_blank" href="http://mail.qq.com/cgi-bin/feed?u=http://www.HelloDBA.com/rss.xml"><img title="至 QQ eMail" src="http://www.HelloDBA.com/images/icon_qq.gif" alt="至 QQ email" /></a></li>
+						<li><a target="_blank" href="http://reader.yodao.com/b.do?url=http://www.HelloDBA.com/rss.xml"><img title="至 Youdao" src="http://www.HelloDBA.com/images/icon_youdao.gif" alt="至 YouDao" /></a></li>
+					</ul>
+				</div>
+        	  </td>
+            <td width="9%" align="left" bgcolor="#527BAD" class="dropmenu"> 
+              <a href="http://www.addthis.com/bookmark.php?v=12&amp;winname=addthis&amp;pub=HelloDBAcom&amp;s=&amp;url=http%3A%2F%2Fwww.HelloDBA.com%2Ftitle=HelloDBA.Com" onMouseOver="return addthis_open(this, '', '', '利用Oracle 10g SQL优化器（STA）优化语句(1)')" onMouseOut="addthis_close()" onClick="return addthis_sendto(this, '', '', '利用Oracle 10g SQL优化器（STA）优化语句(1)')" style="text-decoration: none;font-weight:bold;font-size:10pt;"><font color="#FCCD10">收藏</font></a>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+				<div class="dropmenu" onMouseOver="document.getElementById('About').style.visibility='visible'" onMouseOut="document.getElementById('About').style.visibility='hidden'" bgcolor="#527BAD">
+					<a href="http://www.HelloDBA.com/reader.php?ID=118&lang=cn"><font color="#FCCD10">关于</font></a><br>
+					<ul id="About" bgcolor="#527BAD">
+						<li><a href="http://www.HelloDBA.com/reader.php?ID=118&lang=cn"><font color="#FCCD10">本人</font></a></li>
+						<li><a href="http://www.HelloDBA.com/reader.php?ID=117&lang=cn"><font color="#FCCD10">申明</font></a></li>
+					</ul>
+				</div>
+            </td>
+            <td width="10%" align="left" bgcolor="#527BAD"> 
+        		<font color="#FCCD10"></font></a>
+            </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr bgcolor="#D0E6FD"> 
+    <td width="99%" colspan="10" align=center> 
+		  <font size="2" face="宋体">&nbsp;&nbsp;Oracle技术站。email:
+		<a href="mailto:fuyuncat@gmail.com">fuyuncat@gmail.com</a>&nbsp; MSN: fuyuncat@hotmail.com</font>
+ 		<iframe height="24" frameborder="0" width="220" scrolling="no" src="http://widget.weibo.com/relationship/followbutton.php?language=zh_cn&amp;width=100%&amp;height=24&amp;uid=1407854870&amp;style=1&amp;btn=red&amp;dpc=1" border="0" marginheight="0" marginwidth="0" allowtransparency="true" style="margin-left: 20px;margin-top:0px"></iframe>&nbsp; 
+        <a href="http://www.acoug.org" target=_blank><font color="#CCCCCC">
+			<img border="0" src="http://www.HelloDBA.com/Images/acoug.png" width="110" height="30" alt="acoug"></font></a>&nbsp; 
+        <a href="https://apex.oracle.com/pls/apex/f?p=19297:4:110789587846680::NO:4:P4_ID:7120" target=_blank><font color="#CCCCCC">
+			<img border="0" src="http://www.HelloDBA.com/Images/O_ACELogo_clr.gif" height="30" alt="acoug"></font></a>&nbsp; 
+
+	</td>
+  </tr>
+</table>
+</form>
+
+<!-- <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script> -->
+<div class=Section1 style='layout-grid:15.6pt'>
+
+<h1 id="Title" align=center style='text-align:center'><span lang=EN-US style='color:blue'>利用Oracle 10g SQL优化器（STA）优化语句(1)</span><g:plusone></g:plusone></h1>
+<p align="center">
+[<a id="ArticleAddr" href="http://www.HelloDBA.com/reader.php?ID=163&lang=EN">English</a>]
+</p>
+<p class=MsoNormal align=center style='text-align:center'><b style='mso-bidi-font-weight:
+normal'><span style='font-size:10.0pt;font-family:宋体;mso-ascii-font-family:
+"Times New Roman";mso-hansi-font-family:"Times New Roman";color:red'>作者：</span></b>
+<a id="Author" style="TEXT-DECORATION: none" href="http://www.HelloDBA.com" target=_blank><b style='mso-bidi-font-weight:normal'><span lang=EN-US style='font-size:10.0pt;color:red'>fuyuncat<o:p></o:p></span></b></a>
+</p>
+
+<p class=MsoNormal align=center style='text-align:center'><b style='mso-bidi-font-weight:
+normal'><span style='font-size:10.0pt;font-family:宋体;mso-ascii-font-family:
+"Times New Roman";mso-hansi-font-family:"Times New Roman";color:red'>来源：</span></b>
+<a id="FromSite" style="TEXT-DECORATION: none" href="http://www.HelloDBA.com" target=_blank><b style='mso-bidi-font-weight:normal'><span lang=EN-US style='font-size:10.0pt;color:red'><font color="#FF0000">www.HelloDBA.com</font><o:p></o:p></span></b></a>
+</p>
+
+<p class=MsoNormal align=center style='text-align:center'><b style='mso-bidi-font-weight:
+normal'><span style='font-size:10.0pt;font-family:宋体;mso-ascii-font-family:
+"Times New Roman";mso-hansi-font-family:"Times New Roman";color:red'>日期：</span></b>
+<a id="FromSite" style="TEXT-DECORATION: none" href="http://www.HelloDBA.com/" target=_blank><b style='mso-bidi-font-weight:normal'><span lang=EN-US style='font-size:10.0pt;color:red'><font color="#FF0000">2006-02-07 14:50:13</font><o:p></o:p></span></b></a>
+</p>
+
+<p class=MsoNormal align=center style='text-align:center'>
+分享到&nbsp;
+<script type="text/javascript">
+function trim(str){
+    return str.replace(/(^\s*)|(\s*$)/g, "");  
+}
+
+function shareToQQ(){
+	var _t = "利用Oracle 10g SQL优化器（STA）优化语句(1)";
+	if (trim(_t) == ""){
+		_t=encodeURIComponent(document.title);
+	}else{
+		_t=encodeURIComponent(_t);
+	}
+	var _url = encodeURIComponent(document.location);
+	var _pic = encodeURI('');
+	var _site = 'http://www.HelloDBA.net';
+	var _u = 'http://v.t.qq.com/share/share.php?url='+_url+'&site='+_site+'&pic='+_pic+'&title='+_t;
+	window.open( _u,'', 'width=700, height=680, top=0, left=0, toolbar=no, menubar=no, scrollbars=no, location=yes, resizable=no, status=no' );
+}
+
+function shareTo(s,uu,tt,n,ec){
+	t="利用Oracle 10g SQL优化器（STA）优化语句(1)";
+	ec = (typeof(ec)== "undefined")?1:ec; 
+	u = ec==1?encodeURIComponent(location.href):location.href;
+	if (trim(t) == ""){
+		t=encodeURIComponent(document.title);
+	}else{
+		t=encodeURIComponent(t);
+	}
+	window.open(s+uu+u+tt+t,'ShareTo'+n,'toolbar=0,status=0,width=626,height=436');
+}
+</script>
+
+<a title="新浪微博" href="javascript:(function(){window.open('http://v.t.sina.com.cn/share/share.php?&url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent('利用Oracle 10g SQL优化器（STA）优化语句(1)'),'_blank','width=450,height=400');})()"><img alt="新浪微博" src="images/sina.png" border=0 width=16 height=16></a>
+<a title="腾讯微博" href='javascript:void(0)' onclick='shareToQQ();' class='tmblog'><img src='images/qq.png' alt="腾讯微博" border=0 width=16 height=16></a>
+<a href="javascript:window.open('http://share.renren.com/share/buttonshare.do?title='+encodeURIComponent('利用Oracle 10g SQL优化器（STA）优化语句(1)'.substring(0,76))+'&link='+encodeURIComponent(location.href)+'&content=','_blank','scrollbars=no,width=600,height=450,left=75,top=20,status=no,resizable=yes'); void 0" style="color:#000000;text-decoration:none;font-size:12px;font-weight:normal" title="人人网"><IMG alt="人人网" src="images/renren.ico" border=0 width=16 height=16></a>
+<a title="i贴吧" href="javascript:void(function(){var itieba_share = 'http://tieba.baidu.com/i/sys/share?link=' + encodeURIComponent(location.href)+'&title=' + encodeURIComponent('利用Oracle 10g SQL优化器（STA）优化语句(1)')+'&content=' + encodeURIComponent('');if (!window.open(itieba_share, 'itieba', 'toolbar=0,resizable=1,scrollbars=yes,status=1,width=626,height=436'))  {location.href = itieba_share;}})();"><img src="images/baidu.ico" alt="i贴吧" border=0 width=16 height=16></a>
+<a href="javascript:d=document;t=d.selection?(d.selection.type!='None'?d.selection.createRange().text:''):(d.getSelection?d.getSelection():'');void(kaixin=window.open('http://www.kaixin001.com/~repaste/repaste.php?&amp;rurl='+escape(d.location.href)+'&amp;rtitle='+escape('利用Oracle 10g SQL优化器（STA）优化语句(1)')+'&amp;rcontent='+escape(d.location.href),'kaixin'));kaixin.focus();" title="开心网"><img src="images/kaixin.ico" alt="开心网" border=0 width=16 height=16></a>
+<a title="豆瓣" href="javascript:var u='http://www.douban.com/recommend/?url='+location.href+'&amp;title='+encodeURIComponent('利用Oracle 10g SQL优化器（STA）优化语句(1)');window.open(u,'douban','toolbar=0,resizable=1,scrollbars=yes,status=1,width=450,height=330');void(0)"><img src="images/douban.ico" alt="豆瓣" border=0 width=16 height=16></a>
+<a href="javascript:d=document;t=d.selection?(d.selection.type!='None'?d.selection.createRange().text:''):(d.getSelection?d.getSelection():'');void(kaixin=window.open('http://share.jianghu.taobao.com/share/addShare.htm?url='+escape(d.location.href)+'&tracelog=hellodba.com'));" title="淘宝"><img src="images/taobao.ico" alt="淘宝" border=0 width=16 height=16></a>
+<a href="javascript: void(window.open('http://twitter.com/home/?status='.concat(encodeURIComponent('利用Oracle 10g SQL优化器（STA）优化语句(1)')) .concat(' ') .concat(encodeURIComponent(location.href))));" title="推特"><img src="images/twitter.ico" alt="推特" border=0 width=16 height=16></a>
+<a href="javascript:shareTo('http://www.facebook.com/sharer.php?','u=','&t=','Facebook',1)" title="Facebook"><img src="images/facebook.png" alt="Facebook" border=0 width=16 height=16/></a>
+<a href="javascript:shareTo('https://mail.google.com/mail/?ui=2&view=cm&fs=1&tf=1','&body=','&su=','gmail',1)" title="GMail"><img src="images/gmail.gif" alt="GMail" border=0 width=16 height=16/></a>
+<a href="javascript:shareTo('http://www.blogger.com/blog_this.pyra?','u=','&n=','Blogger',1)" title="Blogger"><img src="images/blogger.png" alt="Blogger" border=0 width=16 height=16/></a>
+<!-- <a href="javascript:shareTo('http://www.google.com/buzz/post?','url=','&title=','Buzz',1)" title="Buzz"><img src="images/buzz.gif" alt="Buzz" border=0 width=16 height=16/></a> -->
+<a href="javascript:shareTo('http://promote.orkut.com/preview?nt=orkut.com','&du=','&tt=','Orkut',1)" title="Orkut"><img src="images/orkut.png" alt="Orkut" border=0 width=16 height=16/></a>
+<!-- <a href="javascript:shareTo('http://www.google.com/reader/link?','url=','&title=','Reader',1)" title="Google Reader"><img src="images/reader.png" alt="Google Reader" border=0 width=16 height=16/></a> -->
+<a href="javascript:shareTo('https://www.google.com/bookmarks/mark?op=edit','&bkmk=','&title=','Bookmarks',1)" title="Google Bookmarks"><img src="images/bookmarks.gif" alt="Google Bookmarks" border=0 width=16 height=16/></a>
+</p>
+<blockquote>
+	<blockquote>
+		<table cellPadding="0" width="88%" border="0" id="table5">
+			<tr>
+				<td id="ArticleContent" width="88%">
+
+		<p class="MsoNormal"><span lang="EN-US">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+		</span></p>
+		<p style="text-indent:36.0pt" class="MsoNormal">
+		<span style="font-family: 宋体">SQL优化器(SQL Tuning Advisor STA)是Oracle10g中推出的帮助DBA优化工具，它的特点是简单、智能，DBA值需要调用函数就可以给出一个性能很差的语句的优化结果。下面介绍一下它的使用。</span></p>
+		<p style="text-indent:36.0pt" class="MsoNormal">
+		<span style="font-family: 宋体">使用STA一定要保证优化器是CBO模式下。</span></p>
+		<h1><span style="font-family: 宋体">一、利用</span><span lang="EN-US">STA</span><span style="font-family: 宋体">优化语句</span></h1>
+		<p style="text-indent:36.0pt" class="MsoNormal">
+		<span style="font-family: 宋体">对于问题语句的收集，可以通过Oracle10g的另一个自动化工具：数据库自动诊断监视工具（ADDM）。它的使用可以参照我的另一篇文章《<a href="http://www.hellodba.com/Doc/oracle10g_addm(1).htm">Oracle10g数据库自动诊断监视工具(ADDM)使用指南》</a>。</span></p>
+		<p style="text-indent:36.0pt" class="MsoNormal">
+		<span style="font-family: 宋体">我们下面简单介绍一下如何优化一条找到的问题语句。正如前面所述说的，STA是用起来很简单（只要你会调用存储过程，都能使用这个工具），三个步骤就可以完成一次语句调优。</span></p>
+		<h3><span style="font-family: 宋体">测试环境创建：</span></h3>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL&gt; CREATE TABLE bigtab AS SELECT rownum as &quot;id&quot;, a.* FROM dba_objects a;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Table created.
+
+<br>
+SQL&gt; create table smalltab as select rownum as &quot;id&quot;, a.* FROM dba_tables a;
+
+
+
+</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Table created.</span><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa">
+
+
+
+</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL&gt; ALTER TABLE bigtab MODIFY (empno NUMBER);</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Table altered.
+
+<br>
+<br>
+SQL&gt; DECLARE
+
+2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; n NUMBER;
+
+3&nbsp;&nbsp;&nbsp; BEGIN
+
+4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FOR n IN 1..100
+
+5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LOOP
+
+6&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; INSERT INTO bigtab SELECT rownum as &quot;id&quot;, a.* FROM dba_objects a;
+
+7&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;COMMIT;
+
+8&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;END LOOP;
+
+9&nbsp;&nbsp; END;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">/</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">PL/SQL procedure successfully completed.
+
+
+
+</span></i></pre>
+		<p style="text-indent:36.0pt" class="MsoNormal">
+		<span style="font-family: 宋体">这里创建一张大表和一张小表，并且都没有索引，下面执行一个查询：</span></p>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL&gt; set timing on</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL&gt; set autot on</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL&gt; select count(*) from bigtab a, smalltab b where a.object_name=b.table_name;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; COUNT(*)</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">----------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp; 135000</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Elapsed: 00:00:05.59</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Execution Plan</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">----------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Plan hash value: 3089226980</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">--------------------------------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">| Id&nbsp; | Operation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Name&nbsp;&nbsp;&nbsp;&nbsp; | Rows&nbsp; | Bytes | Cost (%CPU)| Time&nbsp;&nbsp;&nbsp;&nbsp; |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">--------------------------------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|&nbsp;&nbsp; 0 | SELECT STATEMENT&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp; 1 |&nbsp;&nbsp;&nbsp; 36 |&nbsp; 3550&nbsp;&nbsp; (2)| 00:00:43 |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|&nbsp;&nbsp; 1 |&nbsp; SORT AGGREGATE&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp; 1 |&nbsp;&nbsp;&nbsp; 36 |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|*&nbsp; 2 |&nbsp;&nbsp; HASH JOIN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp; 155K| &nbsp;5462K|&nbsp; 3550&nbsp;&nbsp; (2)| 00:00:43 |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|&nbsp;&nbsp; 3 |&nbsp;&nbsp;&nbsp; TABLE ACCESS FULL| SMALLTAB |&nbsp; 1223 | 22014 |&nbsp;&nbsp;&nbsp; 11&nbsp;&nbsp; (0)| 00:00:01 |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|&nbsp;&nbsp; 4 |&nbsp;&nbsp;&nbsp; TABLE ACCESS FULL| BIGTAB&nbsp;&nbsp; |&nbsp; 1205K|&nbsp;&nbsp;&nbsp; 20M|&nbsp; 3526&nbsp;&nbsp; (1)| 00:00:43 |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">--------------------------------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Predicate Information (identified by operation id):</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">---------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp; 2 - access(&quot;A&quot;.&quot;OBJECT_NAME&quot;=&quot;B&quot;.&quot;TABLE_NAME&quot;)</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Statistics</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">----------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;0&nbsp; recursive calls</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp; db block gets</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 16013&nbsp; consistent gets</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 14491&nbsp; physical reads</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp; redo size</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 412&nbsp; bytes sent via SQL*Net to client</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 385&nbsp; bytes received via SQL*Net from client</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2&nbsp; SQL*Net roundtrips to/from client</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp; sorts (memory)</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp; sorts (disk)</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp; rows processed</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<p style="text-indent:36.0pt" class="MsoNormal">
+		<span style="font-family: 宋体">可以看出这个语句执行性能很差：16013 consistent gets。</span></p>
+		<h3><span style="font-family: 宋体">第一步：创建优化任务并执行</span></h3>
+		<p style="text-indent:36.0pt" class="MsoNormal">
+		<span style="font-family: 宋体">通过调用函数CREATE_TUNING_TASK来创建优化任务，调用存储过程EXECUTE_TUNING_TASK执行该任务：</span></p>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL&gt; set autot off</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL&gt; set timing off</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL&gt; DECLARE</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; 2&nbsp;&nbsp;&nbsp; my_task_name VARCHAR2(30);</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; 3&nbsp;&nbsp;&nbsp; my_sqltext&nbsp;&nbsp; CLOB;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; 4&nbsp; BEGIN</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; 5&nbsp;&nbsp;&nbsp; my_sqltext := &#39;select count(*) from bigtab a, smalltab b where a.object_name=b.table_name&#39;;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; 6&nbsp;&nbsp;&nbsp; my_task_name := DBMS_SQLTUNE.CREATE_TUNING_TASK(</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; 7&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sql_text&nbsp;&nbsp;&nbsp; =&gt; my_sqltext,</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; 8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; user_name&nbsp;&nbsp; =&gt; &#39;DEMO&#39;,</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; 9&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; scope&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =&gt; &#39;COMPREHENSIVE&#39;,</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver"> 10&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; time_limit&nbsp; =&gt; 60,</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver"> 11&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; task_name&nbsp;&nbsp; =&gt; &#39;tuning_sql_test&#39;,</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver"> 12&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; description =&gt; &#39;Task to tune a query on a specified table&#39;);</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver"> 13</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver"> 14&nbsp;&nbsp;&nbsp; DBMS_SQLTUNE.EXECUTE_TUNING_TASK( task_name =&gt; &#39;tuning_sql_test&#39;);</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver"> 15&nbsp; END;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver"> 16&nbsp; /</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">PL/SQL procedure successfully completed.</span></i></pre>
+		<p style="text-indent:36.0pt" class="MsoNormal">
+		<span style="font-family: 宋体">在函数CREATE_TUNING_TASK，sql_text是需要优化的语句，user_name是该语句通过哪个用户执行，scope是优化范围（limited或comprehensive），time_limit优化过程的时间限制，task_name优化任务名称，description优化任务描述。</span></p>
+		<p style="text-indent:36.0pt" class="MsoNormal">
+		<span style="font-family: 宋体">可以通过视图USER_ADVISOR_LOG和USER_ADVISOR_LOG来查看创建过的优化任务。</span></p>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL&gt; select task_name, status from USER_ADVISOR_LOG where task_name=&#39;tuning_sql_</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">test&#39;;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">TASK_NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; STATUS</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">------------------------------ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-----------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">tuning_sql_test&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; COMPLETED</span></i></pre>
+		<h3><span style="font-family: 宋体">第二步：查看优化结果</span></h3>
+		<p style="text-indent:36.0pt" class="MsoNormal">&nbsp;</p>
+		<p style="text-indent:36.0pt" class="MsoNormal">
+		<span style="font-family: 宋体">通过函数可以查看优化结果。</span></p>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL&gt; set long 10000</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL&gt; set longchunksize 1000</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL&gt; set linesize 100</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL&gt; SELECT DBMS_SQLTUNE.REPORT_TUNING_TASK( &#39;tuning_sql_test&#39;) from DUAL;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">DBMS_SQLTUNE.REPORT_TUNING_TASK(&#39;TUNING_SQL_TEST&#39;)</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">----------------------------------------------------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">GENERAL INFORMATION SECTION</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">-------------------------------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Tuning Task Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : tuning_sql_test</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Tuning Task Owner&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DEMO</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Scope&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: COMPREHENSIVE</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Time Limit(seconds)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 60</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Completion Status&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : COMPLETED</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Started at&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 11/30/2005 13:16:43</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Completed at&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 11/30/2005 13:16:44</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Number of Index Findings&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 1</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Schema Name: DEMO</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL ID&nbsp;&nbsp;&nbsp;&nbsp; : 6p64dnnsqf9pm</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">SQL Text&nbsp;&nbsp; : select count(*) from bigtab a, smalltab b where</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; a.object_name=b.table_name</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">-------------------------------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">FINDINGS SECTION (1 finding)</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">-------------------------------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">1- Index Finding (see explain plans section below)</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; The execution plan of this statement can be improved by creating one or more</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; indices.</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; Recommendation (estimated benefit: 100%)</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; ----------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; - Consider running the Access Advisor to improve the physical schema design</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp; or creating the recommended index.</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp; create index DEMO.IDX$$_06C50001 on DEMO.SMALLTAB(&#39;TABLE_NAME&#39;);</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; - Consider running the Access Advisor to improve the physical schema design</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp; or creating the recommended index.</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp; create index DEMO.IDX$$_06C50002 on DEMO.BIGTAB(&#39;OBJECT_NAME&#39;);</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; Rationale</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; ---------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp; Creating the recommended indices significantly improves the execution plan</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp; of this statement. However, it might be preferable to run &quot;Access Advisor&quot;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp; using a representative SQL workload as opposed to a single statement. This</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp;&nbsp; will allow to get comprehensive index recommendations which takes into</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp; &nbsp;&nbsp;account index maintenance overhead and additional space consumption.</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">EXPLAIN PLANS SECTION</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">-------------------------------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">1- Original</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">-----------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Plan hash value: 3089226980</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">--------------------------------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">| Id&nbsp; | Operation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Name&nbsp;&nbsp;&nbsp;&nbsp; | Rows&nbsp; | Bytes | Cost (%CPU)| Time&nbsp;&nbsp;&nbsp;&nbsp; |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">--------------------------------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|&nbsp;&nbsp; 0 | SELECT STATEMENT&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp; 1 |&nbsp;&nbsp;&nbsp; 36 |&nbsp; 3550&nbsp;&nbsp; (2)| 00:00:43 |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|&nbsp;&nbsp; 1 |&nbsp; SORT AGGREGATE&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp; 1 |&nbsp;&nbsp;&nbsp; 36 |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|*&nbsp; 2 |&nbsp;&nbsp; HASH JOIN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp; 155K|&nbsp; 5462K|&nbsp; 3550&nbsp;&nbsp; (2)| 00:00:43 |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|&nbsp;&nbsp; 3 |&nbsp;&nbsp;&nbsp; TABLE ACCESS FULL| SMALLTAB |&nbsp; 1223 | 22014 |&nbsp;&nbsp;&nbsp; 11&nbsp;&nbsp; (0)| 00:00:01 |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|&nbsp;&nbsp; 4 |&nbsp;&nbsp;&nbsp; TABLE ACCESS FULL| BIGTAB&nbsp;&nbsp; |&nbsp; 1205K|&nbsp;&nbsp;&nbsp; 20M|&nbsp; 3526&nbsp;&nbsp; (1)| 00:00:43 |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">--------------------------------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Predicate Information (identified by operation id):</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">---------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp; 2 - access(&quot;A&quot;.&quot;OBJECT_NAME&quot;=&quot;B&quot;.&quot;TABLE_NAME&quot;)</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">2- Using New Indices</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">--------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Plan hash value: 494801882</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">-----------------------------------------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">| Id&nbsp; | Operation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Rows&nbsp; | Bytes | Cost (%CPU)| Time&nbsp;&nbsp;&nbsp;&nbsp; |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">-----------------------------------------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|&nbsp;&nbsp; 0 | SELECT STATEMENT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp; 1 |&nbsp;&nbsp;&nbsp; 36 |&nbsp; 1108&nbsp;&nbsp; (3)| 00:00:14 |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|&nbsp;&nbsp; 1 |&nbsp; SORT AGGREGATE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp; 1 |&nbsp;&nbsp;&nbsp; 36 |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|*&nbsp; 2 |&nbsp;&nbsp; HASH JOIN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp; 155K|&nbsp; 5462K|&nbsp; 1108&nbsp;&nbsp; (3)| 00:00:14 |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|&nbsp;&nbsp; 3 |&nbsp;&nbsp;&nbsp; INDEX FAST FULL SCAN| IDX$$_06C50001 |&nbsp; 1223 | 22014 |&nbsp; &nbsp;&nbsp;&nbsp;3&nbsp;&nbsp; (0)| 00:00:01 |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">|&nbsp;&nbsp; 4 |&nbsp;&nbsp;&nbsp; INDEX FAST FULL SCAN| IDX$$_06C50002 |&nbsp; 1205K|&nbsp;&nbsp;&nbsp; 20M|&nbsp; 1093&nbsp;&nbsp; (2)| 00:00:14 |</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">-----------------------------------------------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">Predicate Information (identified by operation id):</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">---------------------------------------------------</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;&nbsp; 2 - access(&quot;A&quot;.&quot;OBJECT_NAME&quot;=&quot;B&quot;.&quot;TABLE_NAME&quot;)</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">&nbsp;</span></i></pre>
+		<pre style="font-size: 10.0pt; font-family: Courier New; margin-left: 27.0pt; margin-right: 0cm; margin-top: 0cm; margin-bottom: .0001pt"><i><span lang="EN-US" style="font-size: 9.0pt; font-family: Estrangelo Edessa; background: silver">-------------------------------------------------------------------------------</span></i></pre>
+		<p style="text-indent:36.0pt" class="MsoNormal">
+		<span style="font-family: 宋体">看一下这个优化建议报告：</span></p>
+		<p style="text-indent:36.0pt" class="MsoNormal">
+		<span style="font-family: 宋体">第一部分是关于这次优化任务的基本信息：如任务名称、执行时间、范围、涉及到的语句等等。</span></p>
+		<p style="text-indent:36.0pt" class="MsoNormal">
+		<span style="font-family: 宋体">第二部分是关于这次优化任务的所找到的问题以及给出的优化建议。前面先给出了问题描述：可以通过建立更多的所引来提高性能；然后是建议的具体内容：在表smalltab的字段table_name上创建索引，在表bigtab的字段object_name上创建索引；最后是相关注意事项：此次优化虽然给出了创建索引的建议，但是最好通过SQL访问建议器(SQL Access Advisor SAA)结合整个数据库的工作量来深入分析，那样就能给出考虑了索引维护和空间消耗等因素的更加合理的建议。</span></p>
+		<p style="text-indent:36.0pt" class="MsoNormal">
+		<span style="font-family: 宋体">最后，报告还给出了原有的查询计划，以及采用优化建议以后的查询计划的对比。可以看出COST值大大下降。</span></p>
+		<p class="MsoNormal" style="text-indent: 36.0pt">
+		<span style="font-family:宋体">&nbsp;</span></p>
+		<p class="MsoNormal"><span lang="EN-US" style="color: black">&nbsp;</span><span lang="EN-US">&nbsp;</span>
+
+				</td>
+			</tr>
+		</table>
+	</blockquote>
+</blockquote>
+
+<div class="Section1" style="LAYOUT-GRID:  15.6pt none">
+	<table id="table6" cellPadding="0" width="100%" border="0">
+		<tr>
+			<td align="middle" width="50%">
+			上一篇：<a id="PrevArticle" align=center style='text-align:center'  href="http://www.HelloDBA.com/reader.php?ID=164&lang=CN">利用Oracle 10g SQL优化器（STA）优化语句(2)</a></td>
+			<td align="middle" width="50%">
+			下一篇：<a id="NextArticle" align=center style='text-align:center'  href="http://www.HelloDBA.com/reader.php?ID=162&lang=CN">Oracle10g数据库自动诊断监视工具(ADDM)使用指南(3)</a></td>
+		</tr>
+	</table>
+	<table id="table7" cellPadding="0" width="100%" border="0">
+		<tr>
+			<td align="middle" width="100%">
+			<a id="FullListThisClass" align=center style='text-align:center'  href="http://www.HelloDBA.com/index.php?class=DOC&lang=CN">本类中的所有文章</a></td>
+		</tr>
+	</table>
+</div>
+
+</div>
+
+<table border="0" cellpadding="0" width="100%" >
+  <tr> 
+    <td width="100%" colspan="2" align="center"> 
+      <p class="tnbb"> <b><font face="Arial"> <a style="text-decoration: none" href="#TOP"> 
+		<font color="#000080">Top</font></a><font color="#000080"> </font>
+		</font></b> </p>
+      <p class="tsb"><a style="text-decoration: none" href="http://www.HelloDBA.com/" target=_blank>
+		<font face="Arial" color="#000080" size="2">Copyright &copy;2005，HelloDBA.Com 保留一切权利
+		</font>
+        </a>
+      </p>
+      <p class="tnbb"><b><a style="TEXT-DECORATION: none" href="http://www.HelloDBA.com/reader.php?ID=117&lang=cn" target=_blank>
+		<font color="#000080">申明</font></a><font color="#000080"> </font></b>
+        <a style="TEXT-DECORATION: none" href="http://www.HelloDBA.com/SelfIntroduce.htm" target=_blank>
+		<span style="font-weight: 700" size = 1><font color="#000080"><br>
+		</font></span><span style="font-weight: 400" size = 1>
+		<font color="#000080" size="2" face="Arial">by fuyuncat</font></span></a><font size="2" color="#000080"><BR> 
+		</font> 
+	  </p>
+    </td>
+  </tr>
+</table>
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-1088511-1";
+urchinTracker();
+</script>
+</body>
+</html>
